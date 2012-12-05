@@ -1,4 +1,4 @@
-#Descrioption
+#Description
 This is a collection of script and tools developed for system administration purposes
 
 Each script is contained in a specific folder that will include all the README and LICENSE information specific to the particular script or tool
