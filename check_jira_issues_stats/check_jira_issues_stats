@@ -1,0 +1,101 @@
+#!/bin/bash
+#
+###############################################################################
+# check_jira_issues_stats is a script that interacts with a JIRA service via REST API
+# and fetch the counting TOTAL,OPENED,CLOSED,IN_PROGRESS issued for a given project
+###############################################################################
+#
+###############################################################################
+# Author: Marco Massari Calderone <mmassari@inviqa.com>
+#
+# Copyright (C) 2012 Inviqa UK Ltd
+#
+# This program is free software: you can redistribute it and/or modify it under the terms
+# of the GNU General Public License as published by the Free Software Foundation,
+# either version 3 of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see http://www.gnu.org/licenses/.
+#
+###############################################################################
+# 
+# For the usage information run:
+# check_jira_issues_stats --help
+#
+# For installation procedure see the README file
+#
+###############################################################################
+
+#`echo $0` # | cut -d'/' -f 2` # returns the name of the script as it's called stripping the path
+ME=check_jira_issues_stats
+DATE=`date`
+JIRA_SERVER=$1
+USERNAME="$2"
+PASSWORD="$3"
+PROJECT="$4"
+#
+# End of parameters
+
+# command to retrive the list of repos in json format (to be processed later)
+# '&maxResults=0' is needed to trim from the JSON result the actual items of the query
+# so that we keep only the line that contains the total
+DOC_REQUEST=70
+ERROR_MSG="Impossible to retrieve the information from the server. Check the supplied parameters.\n"
+
+if [ $# -ne 4 ] && [ $# -ne  1 ]
+then
+  printf "Incorrect number of paramenters\n"
+  # if the number of parameters is not sufficient then return the Nagios 'Uknown' return code
+  exit 3
+fi
+
+if [ $# -eq 1 ]
+then
+  if [ "$1" = "-h"  -o "$1" = "--help" ]     # Request help.
+  then                                       # Use a "cat script" . . .
+    cat <<DOCUMENTATION
+List the statistics of a specified Project of a specified JIRA instance
+
+usage: $ME -h
+       $ME https://jira_server_uri username password project
+
+example: $ME https://instance.jira.com user 12345678 PROJECT-0
+DOCUMENTATION
+    exit $DOC_REQUEST
+  else 
+    printf "Incorrect paramenter\n"
+    # if the single arameter is not valid then return the Nagios 'Uknown' return code
+    exit 3
+  fi
+fi
+
+QUERY_TOTAL="jql=project=$PROJECT&maxResults=0"
+QUERY_OPEN="jql=project=$PROJECT+AND+status='open'&maxResults=0"
+QUERY_IN_PROGRESS="jql=project=$PROJECT+AND+status='in%20progress'&maxResults=0"
+QUERY_CLOSED="jql=project=$PROJECT+AND+status='closed'&maxResults=0"
+
+function get_total(){
+  QUERY=$1 # the function need a JSON input to submit a query
+  FETCH_CMD="curl -u \"$USERNAME:$PASSWORD\" -X GET -H \"Content-Type: application/json\" \"$JIRA_SERVER/rest/api/latest/search?$QUERY\"  2> /dev/null"
+  # this code preserve only the total count of the items resulting from the query
+  TOTAL=($(eval $FETCH_CMD | cut -f3 -d',' | cut -f2 -d':'))
+  echo $TOTAL; #actual output of the function
+}
+TOTAL_ISSUES=`get_total $QUERY_TOTAL`
+# check if it has been possible to retrieve the number of total issues, if not, it mean
+# there's been some problem connecting to the server, probably do to some wrong parameter
+# then the script stops here with exit 3 (see nagios exit error codes)
+if [ -z $TOTAL_ISSUES  ]; then  printf "$ERROR_MSG"; exit 3; fi
+
+OPEN_ISSUES=`get_total $QUERY_OPEN`
+
+IN_PROGRESS_ISSUES=`get_total $QUERY_IN_PROGRESS`
+
+CLOSED_ISSUES=`get_total $QUERY_CLOSED`
+
+printf "Project: %s, Total: %s, Open: %s, In Progress: %s, Closed: %s \n" $PROJECT $TOTAL_ISSUES $OPEN_ISSUES $IN_PROGRESS_ISSUES $CLOSED_ISSUES
+exit 0
