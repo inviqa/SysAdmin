@@ -1,0 +1,138 @@
+#!/bin/bash
+#
+###############################################################################
+# ggroups2confluence is a bash script that fetch the full list of the Google Groups
+# and their memebers from your Google Apps account and publish it to a JIRA Confluence
+# page of your JIRA server via the 'webdav' protocol.
+###############################################################################
+#
+###############################################################################
+# Author: Marco Massari Calderone <mmassari@inviqa.com>
+#
+# Copyright (C) 2012 Inviqa UK Ltd
+#
+# This program is free software: you can redistribute it and/or modify it under the terms
+# of the GNU General Public License as published by the Free Software Foundation,
+# either version 3 of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see http://www.gnu.org/licenses/.
+#
+###############################################################################
+# 
+################################ REQUIREMENTS #################################
+# this script requires GAM configure to access a Google Apps account via OAUTH
+# http://code.google.com/p/google-apps-manager/
+# You need to plage the gam.py script in a common path i.e. /usr/bin
+#
+# The 'cadaver' tool and 'python v2.5+' need to be installed in order for the script to work.
+# 'cadaver' needs a .netrc file with WebDav's authentication information
+# to be placed on the user's homefolder
+#
+# ggroups2confluence requires a .gginfo file to be placed in path reachable by the user
+# that will execcute the script i.e. the homefolder, and its path need to defined
+# in the ggroups2confluence script (~/.gginfo by default)
+#
+###############################################################################
+
+DATE=`date`
+PYTHON=`which python 2>/dev/null` # Python 2.5+ is required
+CADAVER=`which cadaver 2>/dev/null`
+# manually define the path to the gam script, or link the gam.py in a common PATH like /usr/bin
+# set 755 permissions to the gam.py script (so that you can invoke it without using 'python' command
+# or so that the script can locate it's position
+GAM=`which gam.py 2>/dev/null`
+
+WEBDAV_INFO="~/.gginfo"
+
+
+if [ -f $WEBDAV_INFO ]; then
+  source $WEBDAV_INFO
+# '.webdav_info' must contain the following information
+# WEBDAVHOST="https://xxx.webdavserver.com/wiki/plugins/servlet/confluence/default"
+# PAGENAME="name_of_the_page"
+# PAGEPATH="_pat_to_the_page_/$PAGENAME"
+# FILENAME="$PAGENAME.txt"
+# in webdav the page shows the content of a txt/html file that has the same name as the page
+else
+  WEBDAVHOST="" #"https://xxx.webdavserver.com/wiki/plugins/servlet/confluence/default"
+  PAGENAME="name_of_the_page"
+  PAGEPATH="_pat_to_the_page_/$PAGENAME"
+  FILENAME="$PAGENAME.txt"
+fi
+
+LIST_OF_GROUPS=/tmp/.raw_groups_info # must be a plain text list of Google Groups in the form group@doma.OUTPUT=$FILENAME$1 # the second paramenter must be the name of a file where the script will dump the output
+
+OUTPUT=/tmp/$FILENAME # we will generate the txt/html file that will be uploaded to the webdav server that will be named as the webdav page
+
+# Check to see if the 'cadaver' command is available.
+if [ ! -f "${CADAVER}" ]; then
+	echo "$0 - ERROR: The 'cadaver' command does not appear to be installed."
+	exit
+fi
+# Check to see if the 'gam' command is available.
+if [ ! -f "${GAM}" ]; then
+	echo "$0 - ERROR: The 'gam' command does not appear to be installed."
+	exit
+fi
+
+# Fetch of the list of available groups 
+#eval $PYTHON $GAM print groups name description members owners > $LIST_OF_GROUPS
+
+## fetch the list of the active groups
+eval $PYTHON $GAM print groups name > $LIST_OF_GROUPS 2>/dev/null
+
+# parse the list of groups
+OLDIFS=$IFS
+IFS=,
+[ ! -f $LIST_OF_GROUPS ] && { echo "$LIST_OF_GROUPS file not found"; exit 99; }
+
+# remove the header (first line) from the CSV file
+sed '1d' $LIST_OF_GROUPS > $LIST_OF_GROUPS.tmp
+mv $LIST_OF_GROUPS.tmp $LIST_OF_GROUPS
+
+# start populating the 'page' with generic information
+echo "" > $OUTPUT # clear the 'page'
+echo "<p>The following mailing lists are available for staff use.</p>" >> $OUTPUT
+echo "<p>it's possible to review the Groups you are member of, at this link<br /><a href=\"https://groups.google.com/a/inviqa.com/forum/?hl=en&amp;fromgroups#!myforums\">https://groups.google.com/a/inviqa.com/forum/?hl=en&amp;fromgroups#!myforums</a></p>" >> $OUTPUT
+echo "<p><strong>If you are owner of a group you can even add/remove new members and review the access/security settings of the group</strong></p>" >> $OUTPUT
+echo "<p>This list is generated using the script $0 on the host `hostname`</p>" >> $OUTPUT
+echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
+
+while read groupname name
+do
+	echo $'\n'"<strong>$name</strong>" >> $OUTPUT
+        echo '<ul><li>' >> $OUTPUT
+	echo "<a href=\"mailto:$groupname\">$groupname</a>" >> $OUTPUT
+	eval $PYTHON $GAM info group $groupname | grep Member | cut -f1,2 -d" " | sed -e 's/^/<\/li><li>/g' >> $OUTPUT
+	echo '</li></ul>' >> $OUTPUT
+
+done < $LIST_OF_GROUPS
+echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
+
+# close the popluation of the 'page'
+IFS=$OLDIFS
+
+
+if [ -f "${OUTPUT}" ]; then
+
+	# Run the 'cadaver' command, upload files from the tmp file
+	${CADAVER} >/dev/null << EOF
+        open $WEBDAVHOST
+        cd "$PAGEPATH"   
+        put "$OUTPUT"
+EOF
+
+	# remove the tmp files
+	rm "${OUTPUT}"
+        rm "$LIST_OF_GROUPS"
+else
+	echo "$0 - ERROR: Unable to find the file \'${OUTPUT}\'"
+fi
+
+
+
