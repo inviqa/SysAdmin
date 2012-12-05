@@ -1,0 +1,164 @@
+#!/bin/bash
+#
+##################################################################################################
+#
+# github_backup perform a check-out of all the Git repositories present at a give github.com account.
+#
+# It etrives the list of all the repositories present on the github.com account and then is able to perform the backup
+# an all the new repositories created since the last backup,
+# no need to update the script when repositories are added or removed. 
+#
+# The checked-out directories are then compressed in tar.gz archives and stored in a designated backup folder.
+# 
+# Only one copy of the archive is kept for each repository because the nature of the git repository,
+# already provides means to retrived older versions of the files managed on the git repository (via the use of standard git commands).
+#
+###############################################################################
+# Authors:
+# Marco De Bortoli <mdebortoli@inviqa.com>
+# Marco Massari Calderone <mmassari@inviqa.com>
+#
+# Copyright (C) 2012 Inviqa UK Ltd
+#
+# This program is free software: you can redistribute it and/or modify it under the terms
+# of the GNU General Public License as published by the Free Software Foundation,
+# either version 3 of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see http://www.gnu.org/licenses/.
+#
+###############################################################################
+#
+###################################################################################################
+#
+# Notes:
+#
+# It is advised to set up a cron job to run this script daily and that redirect the
+# standard output and error to the same log file that you specify for command executed internally to this script.
+#
+# Is also recommended to set up a logrotator script on the defined logfile.
+#
+###################################################################################################
+
+
+
+# peramaters to be set up
+# they varies depending on you github account and on your backup directory location
+#
+ME=github_backup
+GITHUB_CREDENTIALS="~/.github_info"
+if [ -f $GITHUB_CREDENTIALS ]; then
+  source $GITHUB_CREDENTIALS
+# '.github_info' must contain the following information
+# USERNAME="<username>"
+# PASSWORD="<password>"
+# ORGANIZATION="<organisation>"
+# 
+# protect the GitHub login information:
+# - storing the file in the home folder of the user(s) that will execute the script
+# - defining the ownershit of '.github_info' to <user>:<user>
+# - defining the permissions of '.github_info' to 600
+#
+else
+  # default values
+  USERNAME="username"
+  PASSWORD="password"
+  ORGANIZATION="organisation"
+fi
+if [ $# -ne 1 ]
+then
+    printf "$ME needs 1 parameter that defines the backup path.\n"
+      # there must be at least one parameter that defines the path where to store the backup
+      # i.e. "/c/backups/github/"
+    exit 1
+fi
+BACKUP_BASE_DIR="$1" # i.e. "/c/backups/github/" from the command-line parameter 
+
+LOG_FILE="/var/log/github_backup.log"
+#
+# End of parameters
+
+# command to retrive the list of repos in json format (to be processed later)
+GIT_URL="curl -u \"$USERNAME:$PASSWORD\" https://api.github.com/orgs/$ORGANIZATION/repos 2> /dev/null"
+
+# Define and array with the list of attributes we want to fetch from the json list of repositories
+ATTRIBUTES=(message name ssh_url)
+
+# Define variables we will use later
+SSH_URL=""
+REPOSITORY=""
+
+# define the function that can create the actual backup for each single repository
+function create_backup(){
+	# accepted paramenters 
+	# ORG: Organization name
+	# REPO: Repository name
+	# URL: The github repository url for the the check-out
+
+	ORG=$1	
+	REPO=$2
+	URL=$3
+	
+	echo "Starting the backup for the repo $REPO"
+
+	BACKUP_DIR=$BACKUP_BASE_DIR'/'$ORG'/'$REPO
+        BACKUP_BASE_NAME=${REPO/\//-}      
+	
+
+        # Make Backup Directory if it doesn't exist
+        cd /tmp/
+	mkdir -p $BACKUP_DIR
+
+        # Clone a mirror + Checkout
+        /usr/bin/git clone -q $URL $BACKUP_BASE_NAME.git 2>&1 >> $LOG_FILE 
+	
+        # Tarball it up                                       
+        tar zcf $BACKUP_BASE_NAME.tar.gz $BACKUP_BASE_NAME.git
+	
+        # Clean Up                             
+        rm -rf $BACKUP_BASE_NAME.git           
+        mv $BACKUP_BASE_NAME.tar.gz $BACKUP_DIR
+
+	echo "Backup for the repo $REPO created in"
+        echo "$BACKUP_DIR/$BACKUP_BASE_NAME.tar.gz"
+}
+
+# defines the arrays containing the NAMES the SSH_URL of each repository, the arrays have dinamic names epending on the attribute name 
+for ATTRIB in "${ATTRIBUTES[@]}"
+do
+	# rest call to GitHub as defined by GIT_URL that retrive the JSON list and and filter it by 'grep' and 'cut'
+ 	RESPONSE=($(eval $GIT_URL | grep $ATTRIB | cut -f4 -d'"'))
+	
+	if [ "$ATTRIB" == "message" ]; then
+		# test if we receive a error message frim github.com
+		if [ ${#RESPONSE[@]} -gt 0 ]; then
+			echo "GitHub error: ${RESPONSE[@]}";
+			exit 1;
+		fi
+	elif [ ${#RESPONSE[@]} -eq 0 ]; then
+		# if there are no items in RESPONSE the attributes we were seeking are NOT present
+		echo "Unable to retrive elements that match attribute: $ATTRIB";
+		exit 1;
+	else	
+		# otherwise proceeds as normal
+		eval "declare -a $ATTRIB=(\"\${RESPONSE[@]}\")"
+	fi
+
+done
+
+
+# fetch the number of repositories
+ELEMENTS=$(eval "echo \"\${#$ATTRIB[@]}\"")
+
+# execute the backup for each repository 
+for (( i=0; i<${ELEMENTS}; i++ ));
+do
+	echo "Start the backup for repositiry number $i"
+	REPOSITORY=${name[$i]}
+	SSH_URL=${ssh_url[$i]}
+	create_backup $ORGANIZATION $REPOSITORY $SSH_URL
+done

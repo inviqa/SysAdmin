@@ -14,7 +14,7 @@ ggroups2confluence requires a .gginfo file to be placed in path reachable by the
 #Usage
 It's advised to place the script in a common path i.e. /usr/bin.
 The best use of the script is to execute it periodically via a 'cron' script
-When executed the script do not need any command-line parameter as it sources them from the .netrc and the .gg
+When executed the script do not need any command-line parameter as it sources them from the .netrc and the .gginfo
 
 #TODO
 - Add the possibility to define command-line parameters to override/ignore the information in the .gginfo file

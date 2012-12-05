@@ -1,0 +1,14 @@
+#
+# rename this file to .github_info
+# place it the .gginfo file in your favourite location
+# preferebaly in the homefolder, and its path need to defined in the github_backup script (~/.github_info by default)
+#
+# Protect the GitHub login information:
+# - storing the file in the home folder of the user(s) that will execute the script
+# - defining the ownershit of '.github_info' to <user>:<user>
+# - defining the permissions of '.github_info' to 600
+#
+
+USERNAME="<username>"
+PASSWORD="<password>"
+ORGANIZATION="<organisation>"
