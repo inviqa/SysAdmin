@@ -23,7 +23,7 @@ When executed the script do not need any command-line parameter as it sources th
 - Add the '-h' (--help) parameter that shows the list of parameters and the usage examples
 
 #License and Author
-Author: Marco Massari Calderone <mmassari@inviqa.com>
+Author: Marco Massari Calderone (mmassari@inviqa.com)
 
 Copyright (C) 2012 Inviqa UK Ltd
 
