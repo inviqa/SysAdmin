@@ -25,7 +25,7 @@
 ###############################################################################
 
 
-GITHUB_CREDENTIALS="~/.github_info"
+GITHUB_CREDENTIALS=~/.github_info
 if [ -f $GITHUB_CREDENTIALS ]; then
     source $GITHUB_CREDENTIALS
     # '.github_info' must contain the following information

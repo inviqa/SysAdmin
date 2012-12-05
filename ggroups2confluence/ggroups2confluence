@@ -47,7 +47,7 @@ CADAVER=`which cadaver 2>/dev/null`
 # or so that the script can locate it's position
 GAM=`which gam.py 2>/dev/null`
 
-WEBDAV_INFO="~/.gginfo"
+WEBDAV_INFO=~/.gginfo
 
 
 if [ -f $WEBDAV_INFO ]; then
