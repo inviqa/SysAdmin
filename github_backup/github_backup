@@ -131,7 +131,7 @@ function create_backup(){
 for ATTRIB in "${ATTRIBUTES[@]}"
 do
 	# rest call to GitHub as defined by GIT_URL that retrive the JSON list and and filter it by 'grep' and 'cut'
- 	RESPONSE=($(eval $GIT_URL | grep $ATTRIB | cut -f4 -d'"'))
+ 	RESPONSE=($(eval $GIT_URL | grep "\"$ATTRIB\"" | cut -f4 -d'"'))
 	
 	if [ "$ATTRIB" == "message" ]; then
 		# test if we receive a error message frim github.com
