@@ -1,0 +1,93 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# We require the srvrmgrdIO module to prepare the request and talk to serverAddressmgrd
+# Also require python plistlib library (apt-get install python-plistlib [in Debian/Ubuntu])
+# http://svn.python.org/projects/python/trunk/Lib/plistlib.py
+#
+#
+#    Copyright (C) 2010 Felim Whiteley
+#
+#    Author: Felim Whiteley <felimwhiteley@gmail.com>
+#             http://www.linkedin.com/in/felimwhiteley
+#
+#    This is free software; you can redistribute it and/or modify it
+#    under the terms of the GNU Lesser General Public License as
+#    published by the Free Software Foundation; version 3 of
+#    the License, or any later version.
+#
+#    This software is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+#    Lesser General Public License for more details.
+#
+#    You should have received a copy of the GNU Lesser General Public
+#    License along with this software; if not, write to the Free
+#    Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+#    02110-1301 USA, or see the FSF site: http://www.fsf.org.
+
+import os, srvrmgrdIO, subprocess, sys, time
+
+osxServices = {
+	'afp': ['currentConnections'],
+	'dhcp': ['numDHCPLeases', 'numConfiguredStaticMaps', 'timeOfSnapShot', 'numActiveStaticMaps'],
+	'dirserv': ['timState', 'ldapdState', 'kdcStatus', 'lookupdState', 'passwordServiceState', 'netinfodState', 'netinfodParentState'],
+	'dns': ['zonesAllocated', 'SOAQueriesInProgress', 'transfersRunning', 'transfersDeferred'],
+	'ftp': ['realConnectionCount', 'anonymousAccessPermitted', 'anonymousConnectionCount'],
+	'jabber': ['serviceMode', 'jabberdState', 'mucState', 'proxyState'],
+	'mysql': ['currentConnections', 'currentThroughput'],
+	'nat': ['activeICMP', 'activeTCP', 'activeUDP'],
+	'netboot': [],
+	'nfs': ['nsfd', 'mountd', 'portmap', 'rpc.lockd'],
+	'print': ['currentJobs', 'currentQueues'],
+	'qtss': ['stateAFP', 'stateDHCP', 'stateHTTP', 'stateNFS', 'stateTFTP'],
+	'smb': ['currentConnections'],
+	'swupdate': ['numOfMirroredPkg', 'numOfEnbabledPkg'],
+	'web': ['apacheState', 'proxyState', 'totalKBytes', 'totalRequests']
+}
+
+def usageError():
+	print "OS X Server Monitoring Tool Event Handler"
+	print "\tCopyright (C) 2010-2012 Felim Whiteley"
+	print "\thttp://code.google.com/p/libsrvrmgrd-osx/"
+	print "This software is licensed under the GNU Lesser General Public License\n"
+	print "ERROR:\tosx_server_event_handler SERVICE STATUS STATUS_TYPE ATTEMPT_NUMBER ADDRESS PORT USER PASSWORD"
+	print "\tWhere SERVICE is one of the following:"
+	for serviceName in osxServices:
+		print "\t\t%s" % (serviceName)
+	print "Example:"
+	print "\tosx_server_event_handler afp CRITICAL HARD 1 172.16.12.2 311 admin_username admin_passsword"
+	sys.exit(1)
+
+if len(sys.argv) == 9:
+	checkService = sys.argv[1]
+	if checkService not in osxServices.keys():
+		usageError()
+	serviceStatus = sys.argv[2]
+	serviceStatusType = sys.argv[3]
+	attemptNumber = int(sys.argv[4])
+	serverAddress = sys.argv[5]
+	serverPort = sys.argv[6]
+	serverUser = sys.argv[7]
+	serverPassword = sys.argv[8]
+else:
+	usageError()
+
+# Need a better way to determine the datafile name - TODO
+# Safe enough guess is we checked using the getState
+serverDataFile = srvrmgrdIO.getServerDataFilename(serverAddress, serverPort, 'servermgr_%s' % checkService, 'getState')
+
+def sendCommand(serviceAction):
+	serverRequest = srvrmgrdIO.buildXML('setState', state=serviceAction)
+	serviceRestart = srvrmgrdIO.sendXML('servermgr_%s' % checkService, serverRequest, serverAddress, serverPort, serverUser, serverPassword)
+	if os.path.exists(serverDataFile):
+		# We remove the temporary datafile so we aren't reporting on cached status next time check status
+		removeTempfile = subprocess.call("rm %s" % serverDataFile, shell=True, stdout=subprocess.PIPE)
+
+if serviceStatus == "CRITICAL" :
+	if serviceStatusType == "HARD" :
+		# Start the service... yes it can also be stopped!
+		sendCommand('START')
+	if serviceStatusType == "SOFT" :
+		if attemptNumber >= 3 :
+			sendCommand('START')
+sys.exit(0)
