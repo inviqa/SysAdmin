@@ -1,13 +1,13 @@
 #!/bin/sh
 #
-# check_apcupsd 1.2
-# Nagios plugin to monitor APC Smart-UPSes using apcupsd.
+# check_apcupsd 2.5
+# Nagios plugin to monitor APC Smart-UPSes and Back-UPSes using apcupsd.
 #
 # Copyright (c) 2008 Martin Toft <mt@martintoft.dk>
-# 
-#
-#Modified by Fabio Milano
-# ADDED APC STATUS
+# Copyright (c) 2010 Gerold Gruber <Gerold.Gruber@edv2g.de> (perfdata)
+# Copyright (C) 2010 Gabriele Tozzi <gabriele@tozzi.eu> (Back-UPS)
+# Copyright (c) 2010 Ermanno Baschiera <ebaschiera@gmail.com> (Back-UPS ES)
+# Copyright (c) 2012 Patrick Reinhardt <pr@reinhardtweb.de> (more Back-UPS ES)
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -27,63 +27,66 @@
 # commands.cfg:
 #
 # define command {
-#         command_name check_apcupsd
-#         command_line $USER1$/check_apcupsd -w $ARG2$ -c $ARG3$ $ARG1$
-#         }
+#	 command_name check_apcupsd
+#	 command_line $USER1$/check_apcupsd -w $ARG2$ -c $ARG3$ $ARG1$
+#	 }
 # 
 # define command {
-#         command_name check_apcupsd_no_notify
-#         command_line $USER1$/check_apcupsd $ARG1$
-#         }
+#	 command_name check_apcupsd_no_notify
+#	 command_line $USER1$/check_apcupsd $ARG1$
+#	 }
 #
 # ups1.cfg:
 #
 # define service {
-#         use generic-service
-#         host_name ups1
-#         service_description CHARGE
-#         check_command check_apcupsd!bcharge!95!50
-#         }
+#	 use generic-service
+#	 host_name ups1
+#	 service_description CHARGE
+#	 check_command check_apcupsd!bcharge!95!50
+#	 }
 # 
 # define service {
-#         use generic-service
-#         host_name ups1
-#         service_description TEMP
-#         check_command check_apcupsd!itemp!35!40
-#         }
+#	 use generic-service
+#	 host_name ups1
+#	 service_description TEMP
+#	 check_command check_apcupsd!itemp!35!40
+#	 }
 # 
 # define service {
-#         use generic-service
-#         host_name ups1
-#         service_description LOAD
-#         check_command check_apcupsd!loadpct!70!85
-#         }
+#	 use generic-service
+#	 host_name ups1
+#	 service_description LOAD
+#	 check_command check_apcupsd!loadpct!70!85
+#	 }
 # 
 # define service {
-#         use generic-service
-#         host_name ups1
-#         service_description TIMELEFT
-#         check_command check_apcupsd_no_notify!timeleft
-#         }
-#
-# define service {
-#	user generic-service
-#	host_name ups1
-#	service_description APC STATUS
-#	check_command check_apcupsd!apcstatus
-#
-
-
-
-
+#	 use generic-service
+#	 host_name ups1
+#	 service_description TIMELEFT
+#	 check_command check_apcupsd_no_notify!timeleft
+#	 }
 
 APCACCESS=/sbin/apcaccess
+
+#set default values
+EXITVALUE=3
+STATUS=UNKNOWN
+
+CHARGEWARN=95
+CHARGECRIT=50
+TEMPWARN=35
+TEMPCRIT=40
+LOADWARN=70
+LOADCRIT=85
+TIMEWARN=10
+TIMECRIT=5
+
 
 usage()
 {
 	echo "usage: check_apcupsd [-c critical_value] [-h hostname] [-p port]"
-	echo -n "                     [-w warning_value] "
-	echo "<bcharge|itemp|loadpct|timeleft>"
+	echo -n "		     [-w warning_value] "
+	echo "<bcharge|itemp|loadpct|timeleft|linefail|battstat|status>"
 	echo
 	echo "hostname and port defaults to localhost and 3551, respectively."
 	echo
@@ -92,8 +95,10 @@ usage()
 	echo "    itemp    = internal temperature, measured in degree Celcius."
 	echo "    loadpct  = load percent, measured in percent (do'h!)."
 	echo "    timeleft = time left with current battery charge and load,"
-	echo "               measured in minutes."
-	echo "	  status = APC UPS STATUS (no -c or -w)" 
+	echo "	       measured in minutes."
+	echo "    linefail = Whether the line is OK or not (Back UPS only)"
+	echo "    status   = Same as 'linefail' (Back UPS ES only - maybe others)"
+	echo "    battstat = Whether the battery is OK or not (Back UPS only)"
 	exit 3
 }
 
@@ -126,9 +131,9 @@ while [ $OPTIND -gt 1 ]; do
 	OPTIND=$(($OPTIND-1))
 done
 
-
 if [ "$ARG" != "bcharge" -a "$ARG" != "itemp" -a "$ARG" != "loadpct" \
-	-a "$ARG" != "timeleft" -a "$ARG" != "status" ]; then
+	-a "$ARG" != "timeleft" -a "$ARG" != "linefail" \
+	-a "$ARG" != "battstat" -a  "$ARG" != "status" ]; then
 	usage
 fi
 
@@ -166,89 +171,139 @@ if [ ! -x "$APCACCESS" ]; then
 	exit 3
 fi
 
-$APCACCESS "status" $HOSTNAME:$PORT > /dev/null
+$APCACCESS status $HOSTNAME:$PORT > /dev/null
 if [ $? -ne 0 ]; then
 	# The error message from apcaccess will do fine.
 	exit 3
 fi
 
-VALUE=`$APCACCESS status $HOSTNAME:$PORT | grep -i ^$ARG | \
-	sed 's/.*:  *\([0-9.][0-9.]*\)[^0-9.].*/\1/'`
-if [ "$VALUE" != "0" ]; then
-	VALUE=`echo $VALUE | sed 's/^0*//'`
+# Back UPS reports only an OK / ERR state
+if [ "$ARG" != "linefail" -a "$ARG" != "battstat" -a "$ARG" != "status" ]; then
+	VALUE=`$APCACCESS status $HOSTNAME:$PORT | grep -i ^$ARG | \
+		sed 's/.*:  *\([0-9.][0-9.]*\)[^0-9.].*/\1/'`
+	if [ "$VALUE" != "0" -a "$VALUE" != "0.0" ]; then
+		VALUE=`echo $VALUE | sed 's/^0*//'`
+	fi
+	ROUNDED=`echo $VALUE | sed 's/\..*//'`
+else
+	VALUE=`$APCACCESS status $HOSTNAME:$PORT | grep -i ^$ARG | \
+		sed 's/.*:  *\([A-Z]*\).*/\1/'`
+#echo "$VALUE"
+	if [ "$VALUE" = "ONLINE" ]; then
+		ROUNDED=1
+	else
+		ROUNDED=0
+	fi
 fi
-ROUNDED=`echo $VALUE | sed 's/\..*//'`
 
 case "$ARG" in
-bcharge)
-	if [ "$CRITVAL" != "" ]; then
-		if [ $ROUNDED -lt $CRITVAL ]; then
-			echo "CRITICAL - Battery Charge: ${VALUE}%"
-			exit 2
-		fi
+linefail)
+	if [ $ROUNDED -gt 0 ]; then
+		STATUS="OK"
+		EXITVALUE=0
+	else
+		STATUS="CRITICAL"
+		EXITVALUE=2
 	fi
-	if [ "$WARNVAL" != "" ]; then
-		if [ $ROUNDED -lt $WARNVAL ]; then
-			echo "WARNING - Battery Charge: ${VALUE}%"
-			exit 1
-		fi
-	fi
-	echo "OK - Battery Charge: ${VALUE}%"
-	;;
-itemp)
-	if [ "$CRITVAL" != "" ]; then
-		if [ $ROUNDED -ge $CRITVAL ]; then
-			echo "CRITICAL - Internal Temperature: $VALUE C"
-			exit 2
-		fi
-	fi
-	if [ "$WARNVAL" != "" ]; then
-		if [ $ROUNDED -ge $WARNVAL ]; then
-			echo "WARNING - Internal Temperature: $VALUE C"
-			exit 1
-		fi
-	fi
-	echo "OK - Internal Temperature: $VALUE C"
-	;;
-loadpct)
-	if [ "$CRITVAL" != "" ]; then
-		if [ $ROUNDED -ge $CRITVAL ]; then
-			echo "CRITICAL - Load: ${VALUE}%"
-			exit 2
-		fi
-	fi
-	if [ "$WARNVAL" != "" ]; then
-		if [ $ROUNDED -ge $WARNVAL ]; then
-			echo "WARNING - Load: ${VALUE}%"
-			exit 1
-		fi
-	fi
-	echo "OK - Load: ${VALUE}%"
-	;;
-timeleft)
-	if [ "$CRITVAL" != "" ]; then
-		if [ $ROUNDED -lt $CRITVAL ]; then
-			echo "CRITICAL - Time Left: $VALUE Minutes"
-			exit 2
-		fi
-	fi
-	if [ "$WARNVAL" != "" ]; then
-		if [ $ROUNDED -lt $WARNVAL ]; then
-			echo "WARNING - Time Left: $VALUE Minutes"
-			exit 1
-		fi
-	fi
-	echo "OK - Time Left: $VALUE Minutes"
+	echo "${STATUS} - Power Line: ${VALUE}|'Power Line'=${ROUNDED}"
 	;;
 status)
-	ONLINE=`echo $VALUE | grep ONLINE| awk '{print $3$4}'`
-	if [ "$ONLINE" != "ONLINE" ]; then
-		echo "OFFLINE - $VALUE"
-		exit 2
+        if [ $ROUNDED -gt 0 ]; then
+                STATUS="OK"
+                EXITVALUE=0
+        else
+                STATUS="CRITICAL"
+                EXITVALUE=2
+        fi
+        echo "${STATUS} - Power Line: ${VALUE}|'Power Line'=${ROUNDED}"
+        ;;
+battstat)
+        if [ $ROUNDED -gt 0 ]; then
+                STATUS="OK"
+                EXITVALUE=0
+        else
+                STATUS="CRITICAL"
+                EXITVALUE=2
+        fi
+        echo "${STATUS} - Battery Status: ${VALUE}|'Battery Status'=${ROUNDED}"
+        ;;
+bcharge)
+	if [ "$CRITVAL" = "" ]; then
+		CRITVAL=$CHARGECRIT
 	fi
-	echo "ONLINE - $VALUE"
+	if [ "$WARNVAL" = "" ]; then
+		WARNVAL=$CHARGEWARN
+	fi
+	if [ $ROUNDED -lt $CRITVAL ]; then
+		STATUS="CRITICAL"
+		EXITVALUE=2
+	elif [ $ROUNDED -lt $WARNVAL ]; then
+		STATUS="WARNING"
+		EXITVALUE=1
+	else
+		STATUS="OK"
+		EXITVALUE=0
+	fi
+	echo "${STATUS} - Battery Charge: ${VALUE}%|'Battery Charge'=${VALUE}%;$WARNVAL:;$CRITVAL:;;"
+	;;
+itemp)
+	if [ "$CRITVAL" = "" ]; then
+		CRITVAL=$TEMPCRIT
+	fi
+	if [ "$WARNVAL" = "" ]; then
+		WARNVAL=$TEMPWARN
+	fi
+	if [ $ROUNDED -ge $CRITVAL ]; then
+		STATUS="CRITICAL"
+		EXITVALUE=2
+	elif [ $ROUNDED -ge $WARNVAL ]; then
+		STATUS="WARNING"
+		EXITVALUE=1
+	else
+		STATUS="OK"
+		EXITVALUE=0
+	fi
+	echo "${STATUS} - Internal Temperature: $VALUE C|'Battery Temperature'=${VALUE}C;$WARNVAL;$CRITVAL;;"
+	;;
+loadpct)
+	if [ "$CRITVAL" = "" ]; then
+		CRITVAL=$LOADCRIT
+	fi
+	if [ "$WARNVAL" = "" ]; then
+		WARNVAL=$LOADWARN
+	fi
+	if [ $ROUNDED -ge $CRITVAL ]; then
+		STATUS="CRITICAL"
+		EXITVALUE=2
+	elif [ $ROUNDED -ge $WARNVAL ]; then
+		STATUS="WARNING"
+		EXITVALUE=1
+	else
+		STATUS="OK"
+		EXITVALUE=0
+	fi
+	echo "${STATUS} - Load: ${VALUE}%|'UPS Load'=${VALUE}%;$WARNVAL;$CRITVAL;;"
+	;;
+timeleft)
+	if [ "$CRITVAL" = "" ]; then
+		CRITVAL=$TIMECRIT
+	fi
+	if [ "$WARNVAL" = "" ]; then
+		WARNVAL=$TIMEWARN
+	fi
+	if [ $ROUNDED -lt $CRITVAL ]; then
+		STATUS="CRITICAL"
+		EXITVALUE=2
+	elif [ $ROUNDED -lt $WARNVAL ]; then
+		STATUS="WARNING"
+		EXITVALUE=1
+	else
+		STATUS="OK"
+		EXITVALUE=0
+	fi
+	echo "${STATUS} - Time Left: $VALUE Minutes|'minutes left'=${VALUE};$WARNVAL:;$CRITVAL:;;"
 	;;
 esac
 
-exit 0
+exit $EXITVALUE
 

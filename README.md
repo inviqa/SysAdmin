@@ -10,4 +10,3 @@ Author: Marco Massari Calderone (mmassari@inviqa.com)
 Other author may be collaborating at the development of the various scripsts and tools.
 
 Each script or tool may be release under a different license that will specified in the specific README file or via other means.
- 

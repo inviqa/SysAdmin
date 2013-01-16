@@ -1,99 +1,46 @@
---- check_apcups.orig	2013-01-16 15:44:06.000000000 +0000
-+++ check_apcups	2013-01-16 15:44:06.000000000 +0000
-@@ -178,75 +178,81 @@
- 	VALUE=`echo $VALUE | sed 's/^0*//'`
- fi
- ROUNDED=`echo $VALUE | sed 's/\..*//'`
--
-+perfData=" | "
- case "$ARG" in
- bcharge)
-+        perfData=$perfData"'residual charge'=${VALUE}%;$WARNVAL;$CRITVAL;0;100"
- 	if [ "$CRITVAL" != "" ]; then
- 		if [ $ROUNDED -lt $CRITVAL ]; then
--			echo "CRITICAL - Battery Charge: ${VALUE}%"
-+			echo "CRITICAL - Battery Charge: ${VALUE}% $perfData"
- 			exit 2
- 		fi
+--- check_apcups.orig	2013-01-16 16:35:04.000000000 +0000
++++ check_apcups	2013-01-16 16:36:16.000000000 +0000
+@@ -1,5 +1,7 @@
+ #!/bin/sh
+ #
++# perfData patch 0.1 MarcoMC@Inviqa.com 20130116
++# 
+ # check_apcupsd 2.5
+ # Nagios plugin to monitor APC Smart-UPSes and Back-UPSes using apcupsd.
+ #
+@@ -244,7 +246,7 @@
+ 		STATUS="OK"
+ 		EXITVALUE=0
  	fi
- 	if [ "$WARNVAL" != "" ]; then
- 		if [ $ROUNDED -lt $WARNVAL ]; then
--			echo "WARNING - Battery Charge: ${VALUE}%"
-+			echo "WARNING - Battery Charge: ${VALUE}% $perfData"
- 			exit 1
- 		fi
- 	fi
--	echo "OK - Battery Charge: ${VALUE}%"
-+	echo "OK - Battery Charge: ${VALUE}% $perfData"
+-	echo "${STATUS} - Battery Charge: ${VALUE}%|'Battery Charge'=${VALUE}%;$WARNVAL:;$CRITVAL:;;"
++	echo "${STATUS} - Battery Charge: ${VALUE}%|'Battery Charge'=${VALUE}%;$WARNVAL;$CRITVAL;0;100"
  	;;
  itemp)
-+        perfData=$perfData"'temp'=${VALUE};$WARNVAL;$CRITVAL;0;100"
- 	if [ "$CRITVAL" != "" ]; then
- 		if [ $ROUNDED -ge $CRITVAL ]; then
--			echo "CRITICAL - Internal Temperature: $VALUE C"
-+			echo "CRITICAL - Internal Temperature: $VALUE C $perfData"
- 			exit 2
- 		fi
+ 	if [ "$CRITVAL" = "" ]; then
+@@ -263,7 +265,7 @@
+ 		STATUS="OK"
+ 		EXITVALUE=0
  	fi
- 	if [ "$WARNVAL" != "" ]; then
- 		if [ $ROUNDED -ge $WARNVAL ]; then
--			echo "WARNING - Internal Temperature: $VALUE C"
-+			echo "WARNING - Internal Temperature: $VALUE C $perfData"
- 			exit 1
- 		fi
- 	fi
--	echo "OK - Internal Temperature: $VALUE C"
-+	echo "OK - Internal Temperature: $VALUE C $perfData"
+-	echo "${STATUS} - Internal Temperature: $VALUE C|'Battery Temperature'=${VALUE}C;$WARNVAL;$CRITVAL;;"
++	echo "${STATUS} - Internal Temperature: $VALUE C|'Battery Temperature'=${VALUE}C;$WARNVAL;$CRITVAL;0;100"
  	;;
  loadpct)
-+        perfData=$perfData"'load'=${VALUE}%;$WARNVAL;$CRITVAL;0;100"
- 	if [ "$CRITVAL" != "" ]; then
- 		if [ $ROUNDED -ge $CRITVAL ]; then
--			echo "CRITICAL - Load: ${VALUE}%"
-+			echo "CRITICAL - Load: ${VALUE}% $perfData"
- 			exit 2
- 		fi
+ 	if [ "$CRITVAL" = "" ]; then
+@@ -282,7 +284,7 @@
+ 		STATUS="OK"
+ 		EXITVALUE=0
  	fi
- 	if [ "$WARNVAL" != "" ]; then
- 		if [ $ROUNDED -ge $WARNVAL ]; then
--			echo "WARNING - Load: ${VALUE}%"
-+			echo "WARNING - Load: ${VALUE}% $perfData"
- 			exit 1
- 		fi
- 	fi
--	echo "OK - Load: ${VALUE}%"
-+	
-+        echo "OK - Load: ${VALUE}% $perfData"
+-	echo "${STATUS} - Load: ${VALUE}%|'UPS Load'=${VALUE}%;$WARNVAL;$CRITVAL;;"
++	echo "${STATUS} - Load: ${VALUE}%|'UPS Load'=${VALUE}%;$WARNVAL;$CRITVAL;0;100"
  	;;
  timeleft)
-+        perfData=$perfData"'time left'=${VALUE};$WARNVAL;$CRITVAL;0;90"
- 	if [ "$CRITVAL" != "" ]; then
- 		if [ $ROUNDED -lt $CRITVAL ]; then
--			echo "CRITICAL - Time Left: $VALUE Minutes"
-+			echo "CRITICAL - Time Left: $VALUE Minutes $perfData"
- 			exit 2
- 		fi
+ 	if [ "$CRITVAL" = "" ]; then
+@@ -301,7 +303,7 @@
+ 		STATUS="OK"
+ 		EXITVALUE=0
  	fi
- 	if [ "$WARNVAL" != "" ]; then
- 		if [ $ROUNDED -lt $WARNVAL ]; then
--			echo "WARNING - Time Left: $VALUE Minutes"
-+			echo "WARNING - Time Left: $VALUE Minutes $perfData"
- 			exit 1
- 		fi
- 	fi
--	echo "OK - Time Left: $VALUE Minutes"
-+	echo "OK - Time Left: $VALUE Minutes $perfData"
- 	;;
- status)
-+        perfData=$perfData"$VALUE"
- 	ONLINE=`echo $VALUE | grep ONLINE| awk '{print $3$4}'`
- 	if [ "$ONLINE" != "ONLINE" ]; then
--		echo "OFFLINE - $VALUE"
-+		echo "OFFLINE - $VALUE $perfData"
- 		exit 2
- 	fi
--	echo "ONLINE - $VALUE"
-+	echo "ONLINE - $VALUE $perfData"
+-	echo "${STATUS} - Time Left: $VALUE Minutes|'minutes left'=${VALUE};$WARNVAL:;$CRITVAL:;;"
++	echo "${STATUS} - Time Left: $VALUE Minutes|'minutes left'=${VALUE};$WARNVAL;$CRITVAL;0;100"
  	;;
  esac
  
