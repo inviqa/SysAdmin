@@ -1,0 +1,99 @@
+--- check_apcups.orig	2013-01-16 15:44:06.000000000 +0000
++++ check_apcups	2013-01-16 15:44:06.000000000 +0000
+@@ -178,75 +178,81 @@
+ 	VALUE=`echo $VALUE | sed 's/^0*//'`
+ fi
+ ROUNDED=`echo $VALUE | sed 's/\..*//'`
+-
++perfData=" | "
+ case "$ARG" in
+ bcharge)
++        perfData=$perfData"'residual charge'=${VALUE}%;$WARNVAL;$CRITVAL;0;100"
+ 	if [ "$CRITVAL" != "" ]; then
+ 		if [ $ROUNDED -lt $CRITVAL ]; then
+-			echo "CRITICAL - Battery Charge: ${VALUE}%"
++			echo "CRITICAL - Battery Charge: ${VALUE}% $perfData"
+ 			exit 2
+ 		fi
+ 	fi
+ 	if [ "$WARNVAL" != "" ]; then
+ 		if [ $ROUNDED -lt $WARNVAL ]; then
+-			echo "WARNING - Battery Charge: ${VALUE}%"
++			echo "WARNING - Battery Charge: ${VALUE}% $perfData"
+ 			exit 1
+ 		fi
+ 	fi
+-	echo "OK - Battery Charge: ${VALUE}%"
++	echo "OK - Battery Charge: ${VALUE}% $perfData"
+ 	;;
+ itemp)
++        perfData=$perfData"'temp'=${VALUE};$WARNVAL;$CRITVAL;0;100"
+ 	if [ "$CRITVAL" != "" ]; then
+ 		if [ $ROUNDED -ge $CRITVAL ]; then
+-			echo "CRITICAL - Internal Temperature: $VALUE C"
++			echo "CRITICAL - Internal Temperature: $VALUE C $perfData"
+ 			exit 2
+ 		fi
+ 	fi
+ 	if [ "$WARNVAL" != "" ]; then
+ 		if [ $ROUNDED -ge $WARNVAL ]; then
+-			echo "WARNING - Internal Temperature: $VALUE C"
++			echo "WARNING - Internal Temperature: $VALUE C $perfData"
+ 			exit 1
+ 		fi
+ 	fi
+-	echo "OK - Internal Temperature: $VALUE C"
++	echo "OK - Internal Temperature: $VALUE C $perfData"
+ 	;;
+ loadpct)
++        perfData=$perfData"'load'=${VALUE}%;$WARNVAL;$CRITVAL;0;100"
+ 	if [ "$CRITVAL" != "" ]; then
+ 		if [ $ROUNDED -ge $CRITVAL ]; then
+-			echo "CRITICAL - Load: ${VALUE}%"
++			echo "CRITICAL - Load: ${VALUE}% $perfData"
+ 			exit 2
+ 		fi
+ 	fi
+ 	if [ "$WARNVAL" != "" ]; then
+ 		if [ $ROUNDED -ge $WARNVAL ]; then
+-			echo "WARNING - Load: ${VALUE}%"
++			echo "WARNING - Load: ${VALUE}% $perfData"
+ 			exit 1
+ 		fi
+ 	fi
+-	echo "OK - Load: ${VALUE}%"
++	
++        echo "OK - Load: ${VALUE}% $perfData"
+ 	;;
+ timeleft)
++        perfData=$perfData"'time left'=${VALUE};$WARNVAL;$CRITVAL;0;90"
+ 	if [ "$CRITVAL" != "" ]; then
+ 		if [ $ROUNDED -lt $CRITVAL ]; then
+-			echo "CRITICAL - Time Left: $VALUE Minutes"
++			echo "CRITICAL - Time Left: $VALUE Minutes $perfData"
+ 			exit 2
+ 		fi
+ 	fi
+ 	if [ "$WARNVAL" != "" ]; then
+ 		if [ $ROUNDED -lt $WARNVAL ]; then
+-			echo "WARNING - Time Left: $VALUE Minutes"
++			echo "WARNING - Time Left: $VALUE Minutes $perfData"
+ 			exit 1
+ 		fi
+ 	fi
+-	echo "OK - Time Left: $VALUE Minutes"
++	echo "OK - Time Left: $VALUE Minutes $perfData"
+ 	;;
+ status)
++        perfData=$perfData"$VALUE"
+ 	ONLINE=`echo $VALUE | grep ONLINE| awk '{print $3$4}'`
+ 	if [ "$ONLINE" != "ONLINE" ]; then
+-		echo "OFFLINE - $VALUE"
++		echo "OFFLINE - $VALUE $perfData"
+ 		exit 2
+ 	fi
+-	echo "ONLINE - $VALUE"
++	echo "ONLINE - $VALUE $perfData"
+ 	;;
+ esac
+ 
