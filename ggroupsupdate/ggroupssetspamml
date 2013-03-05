@@ -75,6 +75,9 @@ fi
 ## fetch the list of the active groups
 eval $PYTHON $GAM print groups name > $LIST_OF_GROUPS 2>/dev/null
 
+# defines the separator in the CSV file
+OLDIFS=$IFS
+IFS=,
 # parse the list of groups
 [ ! -f $LIST_OF_GROUPS ] && { echo "$LIST_OF_GROUPS file not found"; exit 99; }
 
@@ -86,3 +89,5 @@ while read groupname name
 do
 	eval $PYTHON $GAM update group $groupname settings spam_moderation_level $MODERATION
 done < $LIST_OF_GROUPS
+# re set the separator to the orginal value
+IFS=$OLDIFS
