@@ -1,0 +1,88 @@
+#!/bin/bash
+#
+###############################################################################
+# ggroups2confluence is a bash script that fetch the full list of the Google Groups
+# and their memebers from your Google Apps account and publish it to a JIRA Confluence
+# page of your JIRA server via the 'webdav' protocol.
+###############################################################################
+#
+###############################################################################
+# Author: Marco Massari Calderone <mmassari@inviqa.com>
+#
+# Copyright (C) 2012 Inviqa UK Ltd
+#
+# This program is free software: you can redistribute it and/or modify it under the terms
+# of the GNU General Public License as published by the Free Software Foundation,
+# either version 3 of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program.
+# If not, see http://www.gnu.org/licenses/.
+#
+###############################################################################
+# 
+################################ REQUIREMENTS #################################
+# this script requires GAM configure to access a Google Apps account via OAUTH
+# http://code.google.com/p/google-apps-manager/
+# You need to plage the gam.py script in a common path i.e. /usr/bin
+#
+# The 'cadaver' tool and 'python v2.5+' need to be installed in order for the script to work.
+# 'cadaver' needs a .netrc file with WebDav's authentication information
+# to be placed on the user's homefolder
+#
+# ggroups2confluence requires a .gginfo file to be placed in path reachable by the user
+# that will execcute the script i.e. the homefolder, and its path need to defined
+# in the ggroups2confluence script (~/.gginfo by default)
+#
+###############################################################################
+
+DATE=`date`
+PYTHON=`which python 2>/dev/null` # Python 2.5+ is required
+
+# manually define the path to the gam script, or link the gam.py in a common PATH like /usr/bin
+# set 755 permissions to the gam.py script (so that you can invoke it without using 'python' command
+# or so that the script can locate it's position
+GAM=`which gam.py 2>/dev/null`
+
+PARAMETERS_INFO=~/.gginfo
+
+
+if [ -f $PARAMETERS_INFO ]; then
+  source $PARAMETERS_INFO
+# '.gginfo' must contain the following information
+# MODERATION='allow'
+#  Allow will disable the spam filter and allow all mail from persons allowed to post to the group. moderate will place suspected spam messages in a moderation queue and notify group owners. silenty_moderate will place suspected spam message in a moderation queue WITHOUT notifying group owners. reject will fail message delivery for messages suspected of being spam.
+else
+  MODERATION="moderate"
+fi
+
+LIST_OF_GROUPS=/tmp/.raw_groups_info # must be a plain text list of Google Groups in the form group@doma.OUTPUT=$FILENAME$1 # the second paramenter must be the name of a file where the script will dump the output
+
+OUTPUT=/tmp/$FILENAME # we will generate the txt/html file that will be uploaded to the webdav server that will be named as the webdav page
+
+# Check to see if the 'gam' command is available.
+if [ ! -f "${GAM}" ]; then
+	echo "$0 - ERROR: The 'gam' command does not appear to be installed."
+	exit
+fi
+
+# Fetch of the list of available groups 
+#eval $PYTHON $GAM print groups name description members owners > $LIST_OF_GROUPS
+
+## fetch the list of the active groups
+eval $PYTHON $GAM print groups name > $LIST_OF_GROUPS 2>/dev/null
+
+# parse the list of groups
+[ ! -f $LIST_OF_GROUPS ] && { echo "$LIST_OF_GROUPS file not found"; exit 99; }
+
+# remove the header (first line) from the CSV file
+sed '1d' $LIST_OF_GROUPS > $LIST_OF_GROUPS.tmp
+mv $LIST_OF_GROUPS.tmp $LIST_OF_GROUPS
+
+while read groupname name
+do
+	eval $PYTHON $GAM update group $groupname settings spam_moderation_level $MODERATION
+done < $LIST_OF_GROUPS
