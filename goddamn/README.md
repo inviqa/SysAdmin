@@ -2,7 +2,7 @@
 'gddm.gs' (GoDDaMn) is a Google Script (kind of Java Script) that generates Google Docs based on a template document and data
 incoming from a Google Spreadsheet.
 
-GoDDaMn is inspired by the Google Script project named 'Generate Google Docs' by Mikko Ohtamaa (http://opensourcehacker.com).
+GoDDaMn is inspired by the Google Script project named 'Generate Google Docs' by Mikko Ohtamaa (http://opensourcehacker.com), http://opensourcehacker.com/2013/01/21/script-for-generating-google-documents-from-google-spreadsheet-data-source/.
 
 The differences between 'Generated Google Docs' and 'GoDDaMn' are:
 - Modified script dubbed GoDDaMn or gddm.gs (Google Docs Data Marge).
