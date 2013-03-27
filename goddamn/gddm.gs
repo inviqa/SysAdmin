@@ -24,6 +24,7 @@
  */
 
 // Row number from where to fill in the data (starts as 1 = first row)
+// leave this empty to let script pick the ID from the currently selected row of the spreadsheet
 var employee_ID = "";
 
 // Google Doc id from the document template
