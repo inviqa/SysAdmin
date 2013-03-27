@@ -52,6 +52,8 @@ Google Doc Template tags:
 
 :Timestamp:, :Author:, :Employee Full Name:, :Employee Email Address:, :Phone Number:, :Skype:
 
+#TODO & BUGS
+- there is a bug that will break the tag replacement if one of the values for replacement contains a 'carriage and return'
 
 #License and Author
 Authors:
