@@ -28,13 +28,13 @@ var employee_ID = "";
 
 // Google Doc id from the document template
 // (Get ids from the URL)
-var SOURCE_TEMPLATE = "11N7VDMFwyR7wMKCn3phjASqKldvT6rBcazvutIb8-G0";
+var SOURCE_TEMPLATE = "";
 
 // In which spreadsheet we have all the employee data
-var employee_SPREADSHEET = "0AmMcAgBSZv5rdHAtM0ZqT2tJM2lESkhkSUZLSFloNGc";
+var employee_SPREADSHEET = "";
 
 // In which Google Drive we toss the target documents
-var TARGET_FOLDER = "0B2McAgBSZv5rMFRPU1BYTFJvVzQ";
+var TARGET_FOLDER = "";
 
 /**
  * Return spreadsheet row content as JS array.
