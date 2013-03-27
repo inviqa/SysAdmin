@@ -1,5 +1,6 @@
 /**
  * GoDDaMn is inspired by  the Google Script project named 'Generate Google Docs' by Mikko Ohtamaa (http://opensourcehacker.com)
+ * http://opensourcehacker.com/2013/01/21/script-for-generating-google-documents-from-google-spreadsheet-data-source/
  *
  * Generate Google Docs based on a template document and data incoming from a Google Spreadsheet
  *
