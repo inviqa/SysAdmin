@@ -16,26 +16,26 @@ if [ -f $PARAMETERS_INFO ]; then
     # BINDDN="cn=admin,dc=thing,dc=com"
     # BINDPW="P4$$w0rd"
     # OBJECT_CLASS="inetOrgPerson"
-  else
-      URI=""
-        BASE=""
-          BINDDN=""
-            BINDPW=""
-              OBJECT_CLASS=""
-            fi
+else
+    URI=""
+    BASE=""
+    BINDDN=""
+    BINDPW=""
+    OBJECT_CLASS=""
+fi
 
 
-            #OPTIONS=
-            #case "$SSL" in
-            #    start_tls)
-            #       case "$tls_checkpeer" in
-            #           no) OPTIONS+="-Z";;
-          #           *) OPTIONS+="-ZZ";;
-          #       esac;;
-          #esac
+#OPTIONS=
+#case "$SSL" in
+#    start_tls)
+#       case "$tls_checkpeer" in
+#           no) OPTIONS+="-Z";;
+#           *) OPTIONS+="-ZZ";;
+#       esac;;
+#esac
 
-          ldapsearch $OPTIONS -H ${URI} -w ${BINDPW} -D ${BINDDN} \
-                -b ${BASE} \
-                    '(&(objectClass='${OBJECT_CLASS}'))' \
-                    'uid' \
-                    | sed -n '/^ /{H;d};/sshPublicKey:/x;$g;s/\n *//g;s/uid: //gp'
+ldapsearch $OPTIONS -H ${URI} -w ${BINDPW} -D ${BINDDN} \
+            -b ${BASE} \
+            '(&(objectClass='${OBJECT_CLASS}'))' \
+            'uid' \
+            | sed -n '/^ /{H;d};/sshPublicKey:/x;$g;s/\n *//g;s/uid: //gp'
