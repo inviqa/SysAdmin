@@ -1,0 +1,27 @@
+##
+#
+#
+## rename this file to .ldul_infor
+## place it the .ldul_info file in your favourite location
+## preferebaly in the homefolder and its path need to defined in the gh_key_importer.sh script (~/.ghki_info by default)
+##
+## This is the configuration file where you will define a few constants with the
+## specific informations about your OpenLDAP and GitHub services connection
+##
+## Protect the login information:
+## - storing the file in the home folder of the user(s) that will execute the script
+## - defining the ownershit of '.ghki_info' to <user>:<user>
+## - defining the permissions of '.ghki_info' to 600
+##
+USERNAME="<username>"
+PASSWORD="<password>"
+ORGANIZATION="<organisation>"
+
+URI="ldap://some.thing.com"
+BASE="ou=employees,dc=thing,dc=com"
+# omit the 'ou=' to search the full users database
+# BASE="dc=thing,dc=com"
+BINDDN="cn=admin,dc=thing,dc=com"
+BINDPW="P4$$w0rd"
+
+OBJECT_CLASS="inetOrgPerson"
