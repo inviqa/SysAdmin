@@ -34,6 +34,7 @@ else
 fi
 
 ORG_MEMBERS_LIST="curl -u \"$USERNAME:$PASSWORD\" https://api.github.com/orgs/$ORGANIZATION/members 2> /dev/null"
+
 function ldap_users_list(){
 # output
 # ..
@@ -59,6 +60,43 @@ ldapsearch $OPTIONS -L -L -L -H ${URI} -w ${BINDPW} -D ${BINDDN} \
             | sed -n '/^$/d;{N;N;N;s/\n//g};s/dn: //g;s/uid: /;/g;s/gecos: /;/gp;'
 }
 
+
+function get_public_keys(){
+# Returns a string of elements separated by a 'new line' 
+# When reading the output of this function you need to set "IFS=$'\x0a'" 
+# to allow elements to contain 'white spaces' like 'ssh-rsa 987asdawsd....'
+
+# Given a GitHub login id the functions retrieves the public keys stored in GH for that account
+  MEMBER_LOGIN="$1"
+  GITHUB_URL="curl  https://api.github.com/users/$MEMBER_LOGIN/keys 2> /dev/null"
+  
+  # Creates an array of public key retrieved from the GitHub user's public profile
+  eval $GITHUB_URL | grep "\"key\""| cut -f4 -d'"'
+}
+
+function reset_public_keys(){
+  return 0
+}
+
+function upload_public_key(){
+  return 0
+}
+
+function is_a_org_member(){
+# given a 'username' the function verify if the user exists in  the Company's Organisation in GitHub.
+# This is a security mesure to avoid to update the Public Keys for developers that do NOT work anymore for the company
+  MEMBER_LOGIN="$1"
+  MEMBERSHIP_CODE=`eval curl -o /dev/null -I -s -w "%{http_code}" -u \"$USERNAME:$PASSWORD\" https://api.github.com/orgs/$ORGANIZATION/members/$MEMBER_LOGIN`
+  if [ "$MEMBERSHIP_CODE" = "204" ]; then
+    # is a member
+    return 0;
+  else
+    # is not a member
+    return 1; 
+  fi
+}
+
+
 for LDAP_ACCOUNT in `ldap_users_list`
 # For each username:
 do
@@ -69,15 +107,27 @@ do
   USER_ID=${USER_ATTRIBUTE[1]}
   USER_GECOS=${USER_ATTRIBUTE[2]}
   
-#  echo "User DN: $USER_DN"
-#  echo "User ID: $USER_ID"
-#  echo "GitHub Login: $USER_GECOS"
-
-# 2 - look for a match with the gecos attribute in the GitHub Organisation members
-# # If a match is found
-# # 1 - delete the current RSA keys
-# # 2 - then fetches all the Public RSA Keys stored in GitHub for the user
-# # 3 - Save the Public RSA Key in LDAP
+  # 2 - look for a match with the gecos attribute in the GitHub Organisation members
+  if is_a_org_member $USER_GECOS; then
+    # # If a match is found
+    # # 1 - delete the current RSA keys from the LDAP database
+    reset_public_keys $USER_ID;
+    # # 2 - then fetches all the Public RSA Keys stored in GitHub for the user
+    # this will be treated as an array which elements are separated by 'new lines'
+    USER_PUB_KEYS=`get_public_keys $USER_GECOS` 
+    # set the LIST SEPARATOR to the HEX code for a 'new line'
+    IFS=$'\x0a'
+    for KEY in "${USER_PUB_KEYS[@]}"
+    do
+      # 3 - Save the Public RSA Keyin LDAP
+      upload_public_key $KEY
+    done
+    # reset the LIST SEPARATOR to the system default value (usually a 'white space')
+    unset IFS
+    
+else
+  echo no;
+fi
 
 
 
