@@ -2,8 +2,14 @@
 
 # Source the GitHub connection details from .github_info file
 #
+CURL=$(which curl);
+SED=$(which sed);
+TR=$(which tr);
+LDAPMODIFY=$(which ldapmodify);
+
 ME=gh_keys_importer
 PARAMETERS_INFO=~/.ghki_info
+
 if [ -f $PARAMETERS_INFO ]; then
     source $PARAMETERS_INFO
     # '.ghki_info' must contain the following information
@@ -33,7 +39,7 @@ else
     ORGANIZATION=""
 fi
 
-ORG_MEMBERS_LIST="curl -u \"$USERNAME:$PASSWORD\" https://api.github.com/orgs/$ORGANIZATION/members 2> /dev/null"
+ORG_MEMBERS_LIST="$CURL -u \"$USERNAME:$PASSWORD\" https://api.github.com/orgs/$ORGANIZATION/members 2> /dev/null"
 
 function ldap_users_list(){
 # output
@@ -52,12 +58,12 @@ function ldap_users_list(){
 #esac
 
 # 'ldapsearch' will return only the users with a 'gecos' attribute set (which is containing the github username)
-# 'sed' will group 3 lines at a time and make a single line for each account returned by 'ldapsearch' and will strip it from the attribute name
+# '$SED' will group 3 lines at a time and make a single line for each account returned by 'ldapsearch' and will strip it from the attribute name
 ldapsearch $OPTIONS -L -L -L -H ${URI} -w ${BINDPW} -D ${BINDDN} \
             -b ${BASE} \
             '(&(objectClass='${OBJECT_CLASS}')(gecos=*))' \
             'uid' 'gecos' \
-            | sed -n '/^$/d;{N;N;N;s/\n//g};s/dn: //g;s/uid: /;/g;s/gecos: /;/gp;'
+            | $SED -n '/^$/d;{N;N;N;s/\n//g};s/dn: //g;s/uid: /;/g;s/gecos: /;/gp;'
 }
 
 
@@ -68,7 +74,7 @@ function get_public_keys(){
 
 # Given a GitHub login id the functions retrieves the public keys stored in GH for that account
   MEMBER_LOGIN="$1"
-  GITHUB_URL="curl  https://api.github.com/users/$MEMBER_LOGIN/keys 2> /dev/null"
+  GITHUB_URL="$CURL  https://api.github.com/users/$MEMBER_LOGIN/keys 2> /dev/null"
   
   # Creates an array of public key retrieved from the GitHub user's public profile
   eval $GITHUB_URL | grep "\"key\""| cut -f4 -d'"'
@@ -86,7 +92,7 @@ function is_a_org_member(){
 # given a 'username' the function verify if the user exists in  the Company's Organisation in GitHub.
 # This is a security mesure to avoid to update the Public Keys for developers that do NOT work anymore for the company
   MEMBER_LOGIN="$1"
-  MEMBERSHIP_CODE=`eval curl -o /dev/null -I -s -w "%{http_code}" -u \"$USERNAME:$PASSWORD\" https://api.github.com/orgs/$ORGANIZATION/members/$MEMBER_LOGIN`
+  MEMBERSHIP_CODE=`eval $CURL -o /dev/null -I -s -w "%{http_code}" -u \"$USERNAME:$PASSWORD\" https://api.github.com/orgs/$ORGANIZATION/members/$MEMBER_LOGIN`
   if [ "$MEMBERSHIP_CODE" = "204" ]; then
     # is a member
     return 0;
@@ -102,39 +108,30 @@ for LDAP_ACCOUNT in `ldap_users_list`
 do
   # 1 - fetch the dn,uid and gecos
   # create an array from each element of 'LDAP_ACCOUNT'
-  USER_ATTRIBUTE=( $( echo $LDAP_ACCOUNT| tr ";" " ") )
+  USER_ATTRIBUTE=( $( echo $LDAP_ACCOUNT| $TR ";" " ") )
   USER_DN=${USER_ATTRIBUTE[0]}
   USER_ID=${USER_ATTRIBUTE[1]}
   USER_GECOS=${USER_ATTRIBUTE[2]}
   
   # 2 - look for a match with the gecos attribute in the GitHub Organisation members
   if is_a_org_member $USER_GECOS; then
+    echo USER: $USER_GECOS
     # # If a match is found
     # # 1 - delete the current RSA keys from the LDAP database
     reset_public_keys $USER_ID;
     # # 2 - then fetches all the Public RSA Keys stored in GitHub for the user
     # this will be treated as an array which elements are separated by 'new lines'
+    IFS=$'\x0a'
     USER_PUB_KEYS=`get_public_keys $USER_GECOS` 
     # set the LIST SEPARATOR to the HEX code for a 'new line'
-    IFS=$'\x0a'
-    for KEY in "${USER_PUB_KEYS[@]}"
+    for KEY in ${USER_PUB_KEYS[@]}
     do
       # 3 - Save the Public RSA Keyin LDAP
+      #eval $LDAPMODIFY
+      echo KEY: $KEY
       upload_public_key $KEY
     done
     # reset the LIST SEPARATOR to the system default value (usually a 'white space')
     unset IFS
-    
-else
-  echo no;
-fi
-
-
-
-
-
-#    if [ -f $FOLDER/$i  ]; then
-#      USERNAME=`echo "$i" | cut -d'.' -f1`
-#      PUBLIC_KEY=`cat $FOLDER/$i`
-#    fi
+  fi    
 done

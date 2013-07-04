@@ -3,25 +3,48 @@ USERNAME="inviqa-session"
 PASSWORD="sHzL1D8X"
 ORGANIZATION="INVIQA"
 
-function get_public_keys () {
+USER_NAME=$1
+USER_PUB_KEYS=""
+
+function get_public_keys(){
+# Returns a string of elements separated by a 'new line' 
+# When reading the output of this function you need to set "IFS=$'\x0a'" 
+# to allow elements to contain 'white spaces' like 'ssh-rsa 987asdawsd....'
+
+# Given a GitHub login id the functions retrieves the public keys stored in GH for that account
   MEMBER_LOGIN="$1"
-  MEMBER_KEYS="curl  https://api.github.com/users/$MEMBER_LOGIN/keys 2> /dev/null"
-  KEYS_FOUND=($(eval $MEMBER_KEYS | grep "\"key\"" | sed 's/\"key\":/ /g'))
-  echo ${KEYS_FOUND[0]}
+  GITHUB_URL="curl  https://api.github.com/users/$MEMBER_LOGIN/keys 2> /dev/null"
+  
+  # Creates an array of public key retrieved from the GitHub user's public profile
+  eval $GITHUB_URL | grep "\"key\""| cut -f4 -d'"'
 }
 
-function search_for_member () {
+function is_a_org_member(){
+# given a 'username' the function verify if the user exists in  the Company's Organisation in GitHub.
+# This is a security mesure to avoid to update the Public Keys for developers that do NOT work anymore for the company
   MEMBER_LOGIN="$1"
-ORG_MEMBERS_LIST="curl -u \"$USERNAME:$PASSWORD\" https://api.github.com/orgs/$ORGANIZATION/members 2> /dev/null"
-  MEMBER_FOUND=($(eval $ORG_MEMBERS_LIST | grep "\"$MEMBER_LOGIN\"" | grep "\"login\""| cut -f4 -d '"'))
-  if [ "$MEMBER_FOUND" = "$MEMBER_LOGIN" ]; then
-    echo $MEMBER_FOUND
+  MEMBERSHIP_CODE=`eval curl -o /dev/null -I -s -w "%{http_code}" -u \"$USERNAME:$PASSWORD\" https://api.github.com/orgs/$ORGANIZATION/members/$MEMBER_LOGIN`
+  if [ "$MEMBERSHIP_CODE" = "204" ]; then
+    # is a member
+    return 0;
   else
-    return 0; 
+    # is not a member
+    return 1; 
   fi
 }
+#is_a_org_member $USER_NAME
 
-MEMBER=`search_for_member $1`
-echo $MEMBER
-KEYS=`get_public_keys $MEMBER`
-echo $KEYS
+if is_a_org_member $USER_NAME; then
+  USER_PUB_KEYS=`get_public_keys $USER_NAME`
+  
+  # set the LIST SEPARATOR to the HEX code for a 'new line'
+  IFS=$'\x0a'
+  for i in ${USER_PUB_KEYS[@]}
+  do
+    echo $i
+  done
+  # reset the LIST SEPARATOR to the system default value (usually a 'white space')
+  unset IFS
+else
+  echo no;
+fi
