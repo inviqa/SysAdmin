@@ -33,6 +33,7 @@ else
     ORGANIZATION=""
 fi
 
+ORG_MEMBERS_LIST="curl -u \"$USERNAME:$PASSWORD\" https://api.github.com/orgs/$ORGANIZATION/members 2> /dev/null"
 function ldap_users_list(){
 # output
 # ..
@@ -50,7 +51,7 @@ function ldap_users_list(){
 #esac
 
 # 'ldapsearch' will return only the users with a 'gecos' attribute set (which is containing the github username)
-# 'sed' will make a single line for each account returned by 'ldapsearch' and will strip it from the attribute name
+# 'sed' will group 3 lines at a time and make a single line for each account returned by 'ldapsearch' and will strip it from the attribute name
 ldapsearch $OPTIONS -L -L -L -H ${URI} -w ${BINDPW} -D ${BINDDN} \
             -b ${BASE} \
             '(&(objectClass='${OBJECT_CLASS}')(gecos=*))' \
@@ -59,10 +60,19 @@ ldapsearch $OPTIONS -L -L -L -H ${URI} -w ${BINDPW} -D ${BINDDN} \
 }
 
 for LDAP_ACCOUNT in `ldap_users_list`
-do
-echo $LDAP_ACCOUNT;
 # For each username:
-# 1 - fetch the gecos
+do
+  # 1 - fetch the dn,uid and gecos
+  # create an array from each element of 'LDAP_ACCOUNT'
+  USER_ATTRIBUTE=( $( echo $LDAP_ACCOUNT| tr ";" " ") )
+  USER_DN=${USER_ATTRIBUTE[0]}
+  USER_ID=${USER_ATTRIBUTE[1]}
+  USER_GECOS=${USER_ATTRIBUTE[2]}
+  
+#  echo "User DN: $USER_DN"
+#  echo "User ID: $USER_ID"
+#  echo "GitHub Login: $USER_GECOS"
+
 # 2 - look for a match with the gecos attribute in the GitHub Organisation members
 # # If a match is found
 # # 1 - delete the current RSA keys
