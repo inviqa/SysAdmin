@@ -75,13 +75,19 @@ function get_public_keys(){
 
 # Given a GitHub login id the functions retrieves the public keys stored in GH for that account
   MEMBER_LOGIN="$1"
-  GITHUB_URL="$CURL  https://api.github.com/users/$MEMBER_LOGIN/keys 2>> $LOG_FILE"
+  GITHUB_URL="$CURL  -u \"$USERNAME:$PASSWORD\" https://api.github.com/users/$MEMBER_LOGIN/keys 2>> $LOG_FILE"
   
   # Creates an array of public key retrieved from the GitHub user's public profile
   eval $GITHUB_URL | grep "\"key\""| cut -f4 -d'"'
 }
 
 function reset_public_keys(){
+local DN=$1
+ldapmodify -H $URI -c -x -D $BINDDN -w $BINDPW 2>> $LOG_FILE << EOF
+dn: $DN
+changetype: modify
+delete: sshPublicKey
+EOF
   return 0
 }
 
@@ -132,15 +138,16 @@ do
   if is_a_org_member $USER_GECOS; then
     # # If a match is found
     # # 1 - delete the current RSA keys from the LDAP database
-    reset_public_keys $USER_ID;
+    reset_public_keys $USER_DN  2&>1 >> $LOG_FILE
+
 
     # # 2 - then fetches all the Public RSA Keys stored in GitHub for the user
     # this will be treated as an array which elements are separated by 'new lines'
     
+    # set the LIST SEPARATOR to the HEX code for a 'new line' to allow the right handeling of the 'white space' that is present in the public keys
     IFS=$'\x0a'
     
     USER_PUB_KEYS=`get_public_keys $USER_GECOS` 
-    # set the LIST SEPARATOR to the HEX code for a 'new line'
     for KEY in ${USER_PUB_KEYS[@]}
     do
       # 3 - Save the Public RSA Keyin LDAP
