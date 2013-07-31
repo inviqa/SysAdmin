@@ -101,6 +101,7 @@ echo "<p>The following mailing lists are available for staff use.</p>" >> $OUTPU
 echo "<p>it's possible to review the Groups you are member of, at this link<br /><a href=\"https://groups.google.com/a/inviqa.com/forum/?hl=en&amp;fromgroups#!myforums\">https://groups.google.com/a/inviqa.com/forum/?hl=en&amp;fromgroups#!myforums</a></p>" >> $OUTPUT
 echo "<p><strong>If you are owner of a group you can even add/remove new members and review the access/security settings of the group</strong></p>" >> $OUTPUT
 echo "<p>This list is generated using the script $0 on the host `hostname`</p>" >> $OUTPUT
+echo "<p><strong>If this page is not showing any list most probably the issue is with the time of the `hostname` server NOT being in sync and the Google servers refuse the OAUTH connection'.</strong></p>" >> $OUTPUT
 echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
 
 while read groupname name
