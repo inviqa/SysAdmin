@@ -5,11 +5,16 @@
 #
 # Egnyte diurectory to sanitize
 ELC_DIR=$1
+# Initialise the logfile
+LOG_FILE=/var/log/egnyte_sanitize.log
+echo '----- BEGIN OF SANITATION @' `eval date` ' ----' > $LOG_FILE
+
 # set the File Separator to 'hyphen' to create an array with the list of EXCEPTIONS from the EXPTS variable
 IFS="-"
 # list of file naming defects that create exceptions tha ELC is not able to handle
 # like names with multiple spaces, trailing spaces, trailing dots, leading spaces or semi-colon symbols
 EXPTS=" *-* -*.-*  *-*:*"
+
 
 # For each exception
 for EXPT in $EXPTS
@@ -20,7 +25,6 @@ do
   
   for DIRTY_NAME in $DIRTY_NAMES
   do
-    echo DIRTY: $DIRTY_NAME
     if [ $EXPT == " *" ]; then
       # removes leading white sopaces
       CLEAN_NAME=`eval basename '$DIRTY_NAME' | sed -e 's/^[ ]*//'`
@@ -36,9 +40,12 @@ do
       CLEAN_NAME=`eval basename '$DIRTY_NAME'  | sed 's/:/_/g'`
     fi
     NEW_NAME=`eval dirname '$DIRTY_NAME'`/"$CLEAN_NAME"
-    echo __NEW: $NEW_NAME
+    echo DIRTY: $DIRTY_NAME >> $LOG_FILE
+    echo __NEW: $NEW_NAME >> $LOG_FILE
     mv "$DIRTY_NAME" "$NEW_NAME"
   done
 done
+
 # restore the File Separator to the system's default
 unset IFS
+echo '----- END OF SANITATION @' `eval date` ' ----' > $LOG_FILE
