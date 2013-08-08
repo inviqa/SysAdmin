@@ -14,11 +14,11 @@ It's advised to place the script in a common path i.e. /usr/bin.
 When executed the script needs two parameters: <elc folder path>g 
 #TODO
 - add support for options like:
- =============
+ ----
 options available:
 -t :only tests and output the potential changes without renaming the files or folders
 -a :rename (sanitize) the files tha are found with 'wrong' namin
- =============
+ ----
 
 #License and Author
 Author: Marco Massari Calderone (mmassari@inviqa.com)
