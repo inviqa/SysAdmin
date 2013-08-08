@@ -54,5 +54,5 @@ done
 
 # restore the File Separator to the system's default
 unset IFS
-echo '----- END OF SANITATION @' `eval date` ' ----' > $LOG_FILE
+echo '----- END OF SANITATION @' `eval date` ' ----' >> $LOG_FILE
 rm $LOCK_FILE
