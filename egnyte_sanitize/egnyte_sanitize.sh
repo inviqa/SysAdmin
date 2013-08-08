@@ -13,7 +13,7 @@ echo '----- BEGIN OF SANITATION @' `eval date` ' ----' > $LOG_FILE
 IFS="-"
 # list of file naming defects that create exceptions tha ELC is not able to handle
 # like names with multiple spaces, trailing spaces, trailing dots, leading spaces or semi-colon symbols
-EXPTS=" *-* -*.-*  *-*:*"
+EXPTS=" *-* -*.-*  *-*:*-*|*"
 
 
 # For each exception
@@ -38,6 +38,8 @@ do
       CLEAN_NAME=`eval basename '$DIRTY_NAME'  | sed 's/  */ /g'`
     elif [ $EXPT == "*:*" ];then
       CLEAN_NAME=`eval basename '$DIRTY_NAME'  | sed 's/:/_/g'`
+    elif [ $EXPT == "*|*" ];then
+      CLEAN_NAME=`eval basename '$DIRTY_NAME'  | sed 's/\|/_/g'`
     fi
     NEW_NAME=`eval dirname '$DIRTY_NAME'`/"$CLEAN_NAME"
     echo DIRTY: $DIRTY_NAME >> $LOG_FILE
