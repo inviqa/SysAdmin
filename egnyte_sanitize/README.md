@@ -3,19 +3,22 @@ egnyte_sanitize is a bash script that given a Egnyte Local Cloud folder, will ve
 - multiple blank spaces will be reduced to a single space
 - trailing and leading spaces are removed
 - trailing dots are removed
-- semicolumns are areplaced with _ (underscore symbol).
+- semicolumns are areplaced with _ (underscore symbol)
+- vertical bars are areplaced with _ (underscore symbol)
 
 #Requirements
 no specific dependency
 
 #Usage
 It's advised to place the script in a common path i.e. /usr/bin.
-When executed the script needs two parameters: <elc folder path> <option>
+When executed the script needs two parameters: <elc folder path>g 
+#TODO
+- add support for options like:
+=============
 options available:
 -t :only tests and output the potential changes without renaming the files or folders
--a :rename (sanitize) the files tha are found with 'wrong' naming 
-#TODO
-- Add the possibility to define command-line parameters to override/ignore the informatiddon in the .ghkiinfo file
+-a :rename (sanitize) the files tha are found with 'wrong' namin
+=============
 
 #License and Author
 Author: Marco Massari Calderone (mmassari@inviqa.com)
