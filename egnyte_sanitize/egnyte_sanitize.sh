@@ -7,6 +7,10 @@
 ELC_DIR=$1
 # Initialise the logfile
 LOG_FILE=/var/log/egnyte_sanitize.log
+LOCK_FILE="/var/root/egnyte_sanitize.lock"
+
+touch $LOCK_FILE
+
 echo '----- BEGIN OF SANITATION @' `eval date` ' ----' > $LOG_FILE
 
 # set the File Separator to 'hyphen' to create an array with the list of EXCEPTIONS from the EXPTS variable
@@ -51,3 +55,4 @@ done
 # restore the File Separator to the system's default
 unset IFS
 echo '----- END OF SANITATION @' `eval date` ' ----' > $LOG_FILE
+rm $LOCK_FILE
