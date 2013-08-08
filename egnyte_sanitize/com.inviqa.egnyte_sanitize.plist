@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>UserName</key>
+	<string>root</string>
+        <key>KeepAlive</key>
+        <dict>
+                <key>PathState</key>
+                <dict>
+                        <key>/var/root/egnyte_sanitize.lock</key>
+                        <true/>
+                </dict>
+        </dict>
+        <key>Label</key>
+        <string>com.inviqa.egnyte_sanitize</string>
+        <key>Program</key>
+        <string>/var/root/egnyte_sanitize.sh</string>
+        <key>StartInterval</key>
+        <integer>600</integer>
+        <key>ThrottleInterval</key>
+        <integer>60</integer>
+        <key>WorkingDirectory</key>
+        <string>/var/root/</string>
+</dict>
+</plist>
