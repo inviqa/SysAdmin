@@ -1,5 +1,5 @@
 #Description
-g2confluence is a bash script that, given a list of usernames picked from a LDAP database, retrieves the Full Name from LDAP and the RSA Public Keys and publish it to a JIRA Confluence page of your JIRA server via the 'webdav' protocol.
+gh2confluence is a bash script that, given a list of usernames picked from a LDAP database, retrieves the Full Name from LDAP and the RSA Public Keys and publish it to a JIRA Confluence page of your JIRA server via the 'webdav' protocol.
 It also may show the team membership of each user
 #Requirements
 The 'cadaver' tool and 'python v2.5+' need to be installed in order for the script to work.
