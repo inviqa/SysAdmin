@@ -1,11 +1,7 @@
 #Description
-ggroups2confluence is a bash script that fetch the full list of the Google Groups and their memebers from your Google Apps account and publish it to a JIRA Confluence page of your JIRA server via the 'webdav' protocol.
-
+g2confluence is a bash script that, given a list of usernames picked from a LDAP database, retrieves the Full Name from LDAP and the RSA Public Keys and publish it to a JIRA Confluence page of your JIRA server via the 'webdav' protocol.
+It also may show the team membership of each user
 #Requirements
-This script requires GAM configure to access a Google Apps account via OAUTH
-http://code.google.com/p/google-apps-manager/
-You need to plage the gam.py script in a common path i.e. /usr/bin
-
 The 'cadaver' tool and 'python v2.5+' need to be installed in order for the script to work.
 'cadaver' needs a .netrc file with WebDav's authentication information to be placed on the user's home folder.
 
@@ -25,7 +21,7 @@ When executed the script do not need any command-line parameter as it sources th
 #License and Author
 Author: Marco Massari Calderone (mmassari@inviqa.com)
 
-Copyright (C) 2012 Inviqa UK Ltd
+Copyright (C) 2013 Inviqa UK Ltd
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
