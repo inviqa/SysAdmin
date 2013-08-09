@@ -1,0 +1,21 @@
+#
+# rename this file to .gginfo
+# place it the .gginfo file in your favourite locate
+# and make sure to define the correct path to it in the ggrougs2confluence script
+#
+# This is the configuration file where you will define a few constants with the
+# specific informations about your JIRA Confluence wiki
+#
+
+# populate WEBDAVHOST with the your Confluence instance URI
+WEBDAVHOST="https://<webdavserver.com>/wiki/plugins/servlet/confluence/default"
+  
+# PAGENAME defines the name of the page you want to update with the script
+# it's best to create an empty page before the first execution of the script
+PAGENAME="Available Google Groups - Mailing Lists" # youc
+  
+# PAGEPATH defines the relative path to PAGENAME in your Confluence instance
+PAGEPATH="path/to/the/page/$PAGENAME"
+  
+# FILENAME is the actual 'object' that is uploaded via webdave to your Confluence instance
+FILENAME="$PAGENAME.txt"

@@ -1,0 +1,18 @@
+#
+# Rename this file .netrc and place it the home folder of the user that will run the ggroups2confluence script
+#
+# This is a standard .netrc file as required by the tool 'cadaver'
+# used in the ggroups2confluence script
+#
+#
+
+# replace the machine, login and passoword values
+# with your jira server name (without https://)
+# and the username and password that have webdav access
+# to the page you want to update
+#
+
+
+machine webdavserver.com
+  login username
+  password password
