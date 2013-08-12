@@ -15,7 +15,7 @@ WEBDAVHOST="https://<webdavserver.com>/wiki/plugins/servlet/confluence/default"
 PAGENAME="Developers GitHub Accounts And RSA Keys"  
   
 # PAGEPATH defines the relative path to PAGENAME in your Confluence instance
-PAGEPATH="path/to/the/page/$PAGENAME"
+PAGEPATH="Global/Support/Support Team use only/Company Support/$PAGENAME"
   
 # FILENAME is the actual 'object' that is uploaded via webdave to your Confluence instance
 FILENAME="$PAGENAME.txt"

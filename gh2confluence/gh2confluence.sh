@@ -28,7 +28,7 @@
 DATE=`date`
 CADAVER=`which cadaver 2>/dev/null`
 
-WEBDAV_INFO=~/.gginfo
+WEBDAV_INFO=~/.ghinfo
 
 
 if [ -f $WEBDAV_INFO ]; then
@@ -46,10 +46,10 @@ else
   FILENAME="$PAGENAME.txt"
 fi
 
-LIST_OF_GROUPS=/tmp/.raw_groups_info # must be a plain text list of Google Groups in the form group@doma.OUTPUT=$FILENAME$1 # the second paramenter must be the name of a file where the script will dump the output
+#LIST_OF_GROUPS=/tmp/.raw_groups_info # must be a plain text list of Google Groups in the form group@doma.OUTPUT=$FILENAME$1 # the second paramenter must be the name of a file where the script will dump the output
 
 OUTPUT=/tmp/$FILENAME # we will generate the txt/html file that will be uploaded to the webdav server that will be named as the webdav page
-
+touch "$OUTPUT"
 # Check to see if the 'cadaver' command is available.
 if [ ! -f "${CADAVER}" ]; then
 	echo "$0 - ERROR: The 'cadaver' command does not appear to be installed."
@@ -63,12 +63,12 @@ fi
 
 
 # start populating the 'page' with generic information
-echo "" > $OUTPUT # clear the 'page'
-echo "<p>This is the full list of developers employees members of the Inviqa GitHub Organisation.</p>" >> $OUTPUT
-echo "<p><strong>For security reasons, this page is editable by the Support Team members only</strong></p>" >> $OUTPUT
-echo "<p>For each developer is shown the GitHub account name, team membership and Public RSA Key associated to the gitHub account (reusable for other services).</p>" >> $OUTPUT
-echo "<p>This list is generated using the script $0 on the host `hostname`</p>" >> $OUTPUT
-echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
+echo "" > "$OUTPUT" # clear the 'page'
+echo "<p>This is the full list of developers employees members of the Inviqa GitHub Organisation.</p>" >> "$OUTPUT"
+echo "<p><strong>For security reasons, this page is editable by the Support Team members only</strong></p>" >> "$OUTPUT"
+echo "<p>For each developer is shown the GitHub account name, team membership and Public RSA Key associated to the gitHub account (reusable for other services).</p>" >> "$OUTPUT"
+echo "<p>This list is generated using the script $0 on the host `hostname`</p>" >> "$OUTPUT"
+echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> "$OUTPUT"
 
 
 # Parse the array of users
@@ -80,23 +80,23 @@ echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
 # print the list of teams the user is member of
 # print all the Public RSA Keys
 
-while read groupname name
-do
-	echo $'\n'"<strong>$name</strong>" >> $OUTPUT
-        echo '<ul><li>' >> $OUTPUT
-	echo "<a href=\"mailto:$groupname\">$groupname</a>" >> $OUTPUT
-	eval $PYTHON $GAM info group $groupname | grep Member | cut -f1,2 -d" " | sed -e 's/^/<\/li><li>/g' >> $OUTPUT
-	echo '</li></ul>' >> $OUTPUT
+#while read groupname name
+#do
+#	echo $'\n'"<strong>$name</strong>" >> "$OUTPUT"
+#        echo '<ul><li>' >> "$OUTPUT"
+#	echo "<a href=\"mailto:$groupname\">$groupname</a>" >> "$OUTPUT"
+#	eval $PYTHON $GAM info group $groupname | grep Member | cut -f1,2 -d" " | sed -e 's/^/<\/li><li>/g' >> "$OUTPUT"
+#	echo '</li></ul>' >> "$OUTPUT"
 
-done < $LIST_OF_GROUPS
-echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
+#done < $LIST_OF_GROUPS
+echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> "$OUTPUT"
 
 # close the popluation of the 'page'
 IFS=$OLDIFS
 
 
 if [ -f "${OUTPUT}" ]; then
-
+echo aaa
 	# Run the 'cadaver' command, upload files from the tmp file
 	${CADAVER} >/dev/null << EOF
         open $WEBDAVHOST
@@ -105,11 +105,8 @@ if [ -f "${OUTPUT}" ]; then
 EOF
 
 	# remove the tmp files
-	rm "${OUTPUT}"
-        rm "$LIST_OF_GROUPS"
+	#rm "${OUTPUT}"
+        #rm "$LIST_OF_GROUPS"
 else
 	echo "$0 - ERROR: Unable to find the file \'${OUTPUT}\'"
 fi
-
-
-
