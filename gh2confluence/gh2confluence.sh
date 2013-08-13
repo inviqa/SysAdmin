@@ -25,7 +25,6 @@
 #
 ###############################################################################
 
-DATE=`date`
 CADAVER=`which cadaver 2>/dev/null`
 
 WEBDAV_INFO=~/.ghinfo
@@ -68,7 +67,7 @@ echo "<p>This is the full list of developers employees members of the Inviqa Git
 echo "<p><strong>For security reasons, this page is editable by the Support Team members only</strong></p>" >> "$OUTPUT"
 echo "<p>For each developer is shown the GitHub account name, team membership and Public RSA Key associated to the gitHub account (reusable for other services).</p>" >> "$OUTPUT"
 echo "<p>This list is generated using the script $0 on the host `hostname`</p>" >> "$OUTPUT"
-echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> "$OUTPUT"
+echo "<p>last update on <strong><i>"`eval date`"</i></strong></p>" >> "$OUTPUT"
 
 
 # Parse the array of users
@@ -89,14 +88,13 @@ echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> "$OUTPUT"
 #	echo '</li></ul>' >> "$OUTPUT"
 
 #done < $LIST_OF_GROUPS
-echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> "$OUTPUT"
+echo "<p>last update on <strong><i>"`eval date`"</i></strong></p>" >> "$OUTPUT"
 
 # close the popluation of the 'page'
 IFS=$OLDIFS
 
 
 if [ -f "${OUTPUT}" ]; then
-echo aaa
 	# Run the 'cadaver' command, upload files from the tmp file
 	${CADAVER} >/dev/null << EOF
         open $WEBDAVHOST
@@ -105,7 +103,7 @@ echo aaa
 EOF
 
 	# remove the tmp files
-	#rm "${OUTPUT}"
+	rm "${OUTPUT}"
         #rm "$LIST_OF_GROUPS"
 else
 	echo "$0 - ERROR: Unable to find the file \'${OUTPUT}\'"
