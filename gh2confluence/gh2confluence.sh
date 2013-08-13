@@ -25,11 +25,15 @@
 #
 ###############################################################################
 
-CADAVER=`which cadaver 2>/dev/null`
-
+CURL=$(which curl);
+SED=$(which sed);
+TR=$(which tr);
+LDAPMODIFY=$(which ldapmodify);
+CADAVER=$(which cadaver);
 WEBDAV_INFO=~/.ghinfo
+LDAP_INFO=~/.ghki_info
 
-
+LOG_FILE=/tmp/gh2confluence.log
 if [ -f $WEBDAV_INFO ]; then
   source $WEBDAV_INFO
 # '.webdav_info' must contain the following information
@@ -45,20 +49,77 @@ else
   FILENAME="$PAGENAME.txt"
 fi
 
-#LIST_OF_GROUPS=/tmp/.raw_groups_info # must be a plain text list of Google Groups in the form group@doma.OUTPUT=$FILENAME$1 # the second paramenter must be the name of a file where the script will dump the output
+if [ -f $LDAP_INFO ]; then
+    source $LDAP_INFO
+    # '.ghki_info' must contain the following information
+    # protect the login information:
+    # - storing the file in the home folder of the user(s) that will execute the script
+    # - defining the ownershit of '.ghki_info' to <user>:<user>
+    # - defining the permissions of '.ghki_info' to 600
+    #
+    # URI="ldap://some.thing.com"
+    # BASE="dc=thing,dc=com"
+    # BINDDN="cn=admin,dc=thing,dc=com"
+    # BINDPW="P4$$w0rd"
+    # OBJECT_CLASS="inetOrgPerson"
+    #
+    # USERNAME="<username>"
+    # PASSWORD="<password>"
+    # ORGANIZATION="<organisation>"
+    # 
+else
+    URI=""
+    BASE=""
+    BINDDN=""
+    BINDPW=""
+    OBJECT_CLASS=""
+    USERNAME=""
+    PASSWORD=""
+    ORGANIZATION=""
+fi
 
 OUTPUT=/tmp/$FILENAME # we will generate the txt/html file that will be uploaded to the webdav server that will be named as the webdav page
 touch "$OUTPUT"
+
 # Check to see if the 'cadaver' command is available.
 if [ ! -f "${CADAVER}" ]; then
 	echo "$0 - ERROR: The 'cadaver' command does not appear to be installed."
 	exit
 fi
 
-# Connection to the LDAP server
-# Fetch the List of Employes with a 'gecos' attribute
-# (the 'gecos' attribute contains the GitHub username of each developer)
-# and the 'cn' and 'sn' attributes to print the 'Full Name'
+function ldap_users_list(){
+OPTIONS=""
+# 'ldapsearch' will return only the users with a 'gecos' attribute set (which is containing the github username)
+
+#case "$SSL" in
+#    start_tls)
+#       case "$tls_checkpeer" in
+#           no) OPTIONS+="-Z";;
+#           *) OPTIONS+="-ZZ";;
+#       esac;;
+#esac
+
+# '$SED' will group 3 lines at a time and make a single line for each account returned by 'ldapsearch' and will strip it from the attribute name
+ldapsearch $OPTIONS -L -L -L -H ${URI} -w ${BINDPW} -D ${BINDDN} \
+            -b ${BASE} \
+            '(&(objectClass='${OBJECT_CLASS}')(!(gecos=''))(gecos=*))' \
+            'sn' 'uid' 'gecos' 'cn' -S 'uid' \
+            | $SED -n '/^$/d;{N;N;N;N;N;s/\n/;/g};s/dn: //g;s/uid: //g;s/sn: //g;s/cn: //g;s/gecos: //gp;'
+}
+
+function is_a_org_member(){
+# given a 'username' the function verify if the user exists in  the Company's Organisation in GitHub.
+# This is a security mesure to avoid to update the Public Keys for developers that do NOT work anymore for the company
+  MEMBER_LOGIN="$1"
+  MEMBERSHIP_CODE=`eval $CURL -o $LOG_FILE -I -s -w "%{http_code}" -u \"$USERNAME:$PASSWORD\" https://api.github.com/orgs/$ORGANIZATION/members/$MEMBER_LOGIN`
+  if [ "$MEMBERSHIP_CODE" = "204" ]; then
+    # is a member
+    return 0;
+  else
+    # is not a member
+    return 1; 
+  fi
+}
 
 
 # start populating the 'page' with generic information
@@ -70,29 +131,43 @@ echo "<p>This list is generated using the script $0 on the host `hostname`</p>" 
 echo "<p>last update on <strong><i>"`eval date`"</i></strong></p>" >> "$OUTPUT"
 
 
-# Parse the array of users
+# Fetch from the LDAP dabatase the List of Employes (in alphabetical order)
+# with a 'gecos' attribute
+# (the 'gecos' attribute contains the GitHub username of each developer)
+# and the 'cn' and 'sn' attributes to print the 'Full Name'
 # Sort the array in alphabetical order
-# for each user:
-# print the 'Full Name'
-# print the GitHub username
-# connects to Github.com
-# print the list of teams the user is member of
-# print all the Public RSA Keys
-
-#while read groupname name
-#do
-#	echo $'\n'"<strong>$name</strong>" >> "$OUTPUT"
+for LDAP_ACCOUNT in `ldap_users_list`
+# For each username:
+do
+  # 1 - fetch the dn,uid and gecos
+  # create an array from each element of 'LDAP_ACCOUNT'
+  USER_ATTRIBUTE=( $( echo $LDAP_ACCOUNT| $TR ";" " ") )
+  USER_DN=${USER_ATTRIBUTE[0]}
+  USER_ID=${USER_ATTRIBUTE[1]}
+  USER_CN=${USER_ATTRIBUTE[2]}
+  USER_SN=${USER_ATTRIBUTE[3]}
+  USER_GECOS=${USER_ATTRIBUTE[4]}
+  
+  # 2 - look for a match with the gecos attribute in the GitHub Organisation members
+  if is_a_org_member $USER_GECOS; then
+    # # If a match is found
+    # print the 'Full Name'
+    # print the GitHub username
+    # connects to Github.com
+    # print the list of teams the user is member of
+    # print all the Public RSA Keys
+    echo $'\n'"<p>" >> "$OUTPUT"
+    echo "<i>$USER_CN $USER_SN</i> - <strong>$USER_GECOS</strong>" >> "$OUTPUT"
 #        echo '<ul><li>' >> "$OUTPUT"
 #	echo "<a href=\"mailto:$groupname\">$groupname</a>" >> "$OUTPUT"
 #	eval $PYTHON $GAM info group $groupname | grep Member | cut -f1,2 -d" " | sed -e 's/^/<\/li><li>/g' >> "$OUTPUT"
 #	echo '</li></ul>' >> "$OUTPUT"
+    echo "</p>" >> "$OUTPUT"
+  fi    
+done
 
-#done < $LIST_OF_GROUPS
 echo "<p>last update on <strong><i>"`eval date`"</i></strong></p>" >> "$OUTPUT"
-
 # close the popluation of the 'page'
-IFS=$OLDIFS
-
 
 if [ -f "${OUTPUT}" ]; then
 	# Run the 'cadaver' command, upload files from the tmp file
@@ -104,7 +179,6 @@ EOF
 
 	# remove the tmp files
 	rm "${OUTPUT}"
-        #rm "$LIST_OF_GROUPS"
 else
 	echo "$0 - ERROR: Unable to find the file \'${OUTPUT}\'"
 fi
