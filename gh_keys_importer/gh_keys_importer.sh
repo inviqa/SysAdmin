@@ -40,8 +40,6 @@ else
     ORGANIZATION=""
 fi
 
-ORG_MEMBERS_LIST="$CURL -u \"$USERNAME:$PASSWORD\" https://api.github.com/orgs/$ORGANIZATION/members 2>> $LOG_FILE"
-
 function ldap_users_list(){
 # output
 # ..
