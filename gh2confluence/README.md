@@ -5,15 +5,15 @@ It also may show the team membership of each user
 The 'cadaver' tool and 'python v2.5+' need to be installed in order for the script to work.
 'cadaver' needs a .netrc file with WebDav's authentication information to be placed on the user's home folder.
 
-ggroups2confluence requires a .gginfo file to be placed in path reachable by the user that will execute the script i.e. the homefolder, and its path need to defined in the ggroups2confluence script (~/.gginfo by default)
+gh2confluence requires a `.ghinfo` and a `.ghki_info` files to be placed in path reachable by the user that will execute the script i.e. the homefolder, and its path need to defined in the gh2confluence script (`~/.ghinfo` and `~/.ghki_info`by default)
 
 #Usage
 It's advised to place the script in a common path i.e. /usr/bin.
 The best use of the script is to execute it periodically via a 'cron' script
-When executed the script do not need any command-line parameter as it sources them from the .netrc and the .gginfo
+When executed the script do not need any command-line parameter as it sources them from the .netrc and the .ghinfo
 
 #TODO
-- Add the possibility to define command-line parameters to override/ignore the information in the .gginfo file
+- Add the possibility to define command-line parameters to override/ignore the information in the .ghinfo file
 - Add the possibility to define command-line parameters to override/ignore the information in the .netrc file
 - Add the '-v' (--version) parameter
 - Add the '-h' (--help) parameter that shows the list of parameters and the usage examples
