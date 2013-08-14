@@ -33,7 +33,7 @@ CADAVER=$(which cadaver);
 WEBDAV_INFO=~/.ghinfo
 LDAP_INFO=~/.ghki_info
 
-LOG_FILE=/tmp/gh2confluence.log
+LOG_FILE=/var/log/gh2confluence.log
 if [ -f $WEBDAV_INFO ]; then
   source $WEBDAV_INFO
 # '.webdav_info' must contain the following information
@@ -130,6 +130,9 @@ echo "<p>For each developer is shown the GitHub account name, team membership an
 echo "<p>This list is generated using the script $0 on the host `hostname`</p>" >> "$OUTPUT"
 echo "<p>last update on <strong><i>"`eval date`"</i></strong></p>" >> "$OUTPUT"
 
+ # set the LIST SEPARATOR to the HEX code for a 'new line' to allow the
+ # correct handeling of the 'white space' that could be present in the 'sn' ldap attribute (or any other attribute
+IFS=$'\x0a'
 
 # Fetch from the LDAP dabatase the List of Employes (in alphabetical order)
 # with a 'gecos' attribute
@@ -139,15 +142,17 @@ echo "<p>last update on <strong><i>"`eval date`"</i></strong></p>" >> "$OUTPUT"
 for LDAP_ACCOUNT in `ldap_users_list`
 # For each username:
 do
+   # reset the LIST SEPARATOR to the system default value (usually a 'white space')
   # 1 - fetch the dn,uid and gecos
   # create an array from each element of 'LDAP_ACCOUNT'
-  USER_ATTRIBUTE=( $( echo $LDAP_ACCOUNT| $TR ";" " ") )
-  USER_DN=${USER_ATTRIBUTE[0]}
-  USER_ID=${USER_ATTRIBUTE[1]}
-  USER_CN=${USER_ATTRIBUTE[2]}
-  USER_SN=${USER_ATTRIBUTE[3]}
-  USER_GECOS=${USER_ATTRIBUTE[4]}
+  echo $LDAP_ACCOUNT >> "$LOG_FILE"
+  USER_DN=`echo $LDAP_ACCOUNT | cut -d\; -f1`
+  USER_ID=`echo $LDAP_ACCOUNT | cut -d\; -f2`
+  USER_CN=`echo $LDAP_ACCOUNT | cut -d\; -f3`
+  USER_SN=`echo $LDAP_ACCOUNT | cut -d\; -f4`
+  USER_GECOS=`echo $LDAP_ACCOUNT | cut -d\; -f5`
   
+  echo $USER_ID" - "$USER_GECOS >> "$LOG_FILE"
   # 2 - look for a match with the gecos attribute in the GitHub Organisation members
   if is_a_org_member $USER_GECOS; then
     # # If a match is found
@@ -163,8 +168,12 @@ do
 #	eval $PYTHON $GAM info group $groupname | grep Member | cut -f1,2 -d" " | sed -e 's/^/<\/li><li>/g' >> "$OUTPUT"
 #	echo '</li></ul>' >> "$OUTPUT"
     echo "</p>" >> "$OUTPUT"
-  fi    
+  else
+    echo "Is not member of the Organisation" >> "$LOG_FILE"
+  fi
 done
+# reset the LIST SEPARATOR to the system default value (usually a 'white space')
+unset IFS
 
 echo "<p>last update on <strong><i>"`eval date`"</i></strong></p>" >> "$OUTPUT"
 # close the popluation of the 'page'
@@ -178,7 +187,7 @@ if [ -f "${OUTPUT}" ]; then
 EOF
 
 	# remove the tmp files
-	rm "${OUTPUT}"
+	#rm "${OUTPUT}"
 else
 	echo "$0 - ERROR: Unable to find the file \'${OUTPUT}\'"
 fi
