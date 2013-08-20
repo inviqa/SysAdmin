@@ -112,7 +112,7 @@ function is_a_org_member(){
 # given a 'username' the function verify if the user exists in  the Company's Organisation in GitHub.
 # This is a security mesure to avoid to update the Public Keys for developers that do NOT work anymore for the company
   MEMBER_LOGIN="$1"
-  MEMBERSHIP_CODE=`eval $CURL -o $LOG_FILE -I -s -w "%{http_code}" -u \"$USERNAME:$PASSWORD\" https://api.github.com/orgs/$ORGANIZATION/members/$MEMBER_LOGIN`
+  MEMBERSHIP_CODE=`eval $CURL -o /dev/null -I -s -w "%{http_code}" -u \"$USERNAME:$PASSWORD\" https://api.github.com/orgs/$ORGANIZATION/members/$MEMBER_LOGIN 2>> "$LOG_FILE"`
   if [ "$MEMBERSHIP_CODE" = "204" ]; then
     # is a member
     return 0;
@@ -122,6 +122,18 @@ function is_a_org_member(){
   fi
 }
 
+function get_public_keys(){
+# Returns a string of elements separated by a 'new line' 
+# When reading the output of this function you need to set "IFS=$'\x0a'" 
+# to allow elements to contain 'white spaces' like 'ssh-rsa 987asdawsd....'
+
+# Given a GitHub login id the functions retrieves the public keys stored in GH for that account
+  MEMBER_LOGIN="$1"
+  GITHUB_URL="$CURL -s -u \"$USERNAME:$PASSWORD\" https://api.github.com/users/$MEMBER_LOGIN/keys 2>> $LOG_FILE"
+  
+  # Creates an array of public key retrieved from the GitHub user's public profile
+  eval $GITHUB_URL | grep "\"key\""| cut -f4 -d'"'
+}
 
 # start populating the 'page' with generic information
 echo "" > "$OUTPUT" # clear the 'page'
@@ -157,17 +169,21 @@ do
   # 2 - look for a match with the gecos attribute in the GitHub Organisation members
   if is_a_org_member $USER_GECOS; then
     # # If a match is found
-    # print the 'Full Name'
-    # print the GitHub username
-    # connects to Github.com
-    # print the list of teams the user is member of
-    # print all the Public RSA Keys
+    # connects to Github.com and retrives the pub keys
+    USER_PUB_KEYS=`get_public_keys $USER_GECOS ` 
     echo $'\n'"<p>" >> "$OUTPUT"
+    # print the 'Full Name' and the GitHub username
     echo "<i>$USER_CN $USER_SN</i> - <strong>$USER_GECOS</strong>" >> "$OUTPUT"
-#        echo '<ul><li>' >> "$OUTPUT"
+# print the list of teams the user is member of
+    # print all the Public RSA Keys
+    echo '<div>' >> "$OUTPUT"
+    for KEY in ${USER_PUB_KEYS[@]}
+    do
+      # 3 - Save the Public RSA Keyin LDAP
+      echo '<div>'$KEY'</div>'  >> "$OUTPUT"
+    done
 #	echo "<a href=\"mailto:$groupname\">$groupname</a>" >> "$OUTPUT"
-#	eval $PYTHON $GAM info group $groupname | grep Member | cut -f1,2 -d" " | sed -e 's/^/<\/li><li>/g' >> "$OUTPUT"
-#	echo '</li></ul>' >> "$OUTPUT"
+    echo '</div>' >> "$OUTPUT"
     echo "</p>" >> "$OUTPUT"
   else
     echo "Is not member of the Organisation" >> "$LOG_FILE"
