@@ -104,7 +104,8 @@ ldapsearch $OPTIONS -L -L -L -H ${URI} -w ${BINDPW} -D ${BINDDN} \
             -b ${BASE} \
             '(&(objectClass='${OBJECT_CLASS}')(!(gecos=''))(gecos=*))' \
             'sn' 'uid' 'gecos' 'cn' -S 'uid' \
-            | $SED -n '/^$/d;{N;N;N;N;N;s/\n/;/g};s/dn: //g;s/uid: //g;s/sn: //g;s/cn: //g;s/gecos: //gp;'
+            | $SED -n '/^$/d;{N;N;N;N;N;s/\n/;/g};p;'
+            #| $SED -n '/^$/d;{N;N;N;N;N;s/\n/;/g};s/dn: //g;s/uid: //g;s/sn: //g;s/cn: //g;s/gecos: //gp;'
 }
 
 function is_a_org_member(){
@@ -146,11 +147,11 @@ do
   # 1 - fetch the dn,uid and gecos
   # create an array from each element of 'LDAP_ACCOUNT'
   echo $LDAP_ACCOUNT >> "$LOG_FILE"
-  USER_DN=`echo $LDAP_ACCOUNT | cut -d\; -f1`
-  USER_ID=`echo $LDAP_ACCOUNT | cut -d\; -f2`
-  USER_CN=`echo $LDAP_ACCOUNT | cut -d\; -f3`
-  USER_SN=`echo $LDAP_ACCOUNT | cut -d\; -f4`
-  USER_GECOS=`echo $LDAP_ACCOUNT | cut -d\; -f5`
+  #USER_DN=`echo $LDAP_ACCOUNT | cut -d\; -f1`
+  USER_ID=`echo $LDAP_ACCOUNT | sed -n 's/.*uid: //g;s/\;.*//gp'`
+  USER_CN=`echo $LDAP_ACCOUNT | sed -n 's/.*cn: //g;s/\;.*//gp'`
+  USER_SN=`echo $LDAP_ACCOUNT | sed -n 's/.*sn: //g;s/\;.*//gp'`
+  USER_GECOS=`echo $LDAP_ACCOUNT | sed -n 's/.*gecos: //g;s/\;.*//gp'`
   
   echo $USER_ID" - "$USER_GECOS >> "$LOG_FILE"
   # 2 - look for a match with the gecos attribute in the GitHub Organisation members
