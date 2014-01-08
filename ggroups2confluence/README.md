@@ -2,7 +2,7 @@
 ggroups2confluence is a bash script that fetch the full list of the Google Groups and their memebers from your Google Apps account and publish it to a JIRA Confluence page of your JIRA server via the 'webdav' protocol.
 
 #Requirements
-This script requires GAM configure to access a Google Apps account via OAUTH
+This script requires GAM version 3 to configure to access a Google Apps account via OAUTH2
 http://code.google.com/p/google-apps-manager/
 You need to plage the gam.py script in a common path i.e. /usr/bin
 
