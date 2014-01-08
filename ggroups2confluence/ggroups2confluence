@@ -109,8 +109,9 @@ do
 	echo $'\n'"<strong>$name</strong>" >> $OUTPUT
         echo '<ul><li>' >> $OUTPUT
 	echo "<a href=\"mailto:$groupname\">$groupname</a>" >> $OUTPUT
-	eval $PYTHON $GAM info group $groupname | grep Member | cut -f1,2 -d" " | sed -e 's/^/<\/li><li>/g' >> $OUTPUT
-	echo '</li></ul>' >> $OUTPUT
+	eval $PYTHON $GAM info group $groupname | grep owner | cut -f2,3 -d" " | sed -e 's/^/<\/li><li>/g' >> $OUTPUT
+	eval $PYTHON $GAM info group $groupname | grep member | cut -f2,3 -d" " | sed -e 's/^/<\/li><li>/g' >> $OUTPUT
+	echo "</li></ul>"$'\n' >> $OUTPUT
 
 done < $LIST_OF_GROUPS
 echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
