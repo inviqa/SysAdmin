@@ -106,9 +106,9 @@ echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
 
 while read groupname name
 do
-	echo $'\n'"<strong>$name</strong>" >> $OUTPUT
+	echo "<br/>"$'\n'"<strong>$name</strong> - <a href=\"mailto:$groupname\">$groupname</a>" >> $OUTPUT
         echo '<ul><li>' >> $OUTPUT
-	echo "<a href=\"mailto:$groupname\">$groupname</a>" >> $OUTPUT
+	# echo "<a href=\"mailto:$groupname\">$groupname</a>" >> $OUTPUT
 	eval $PYTHON $GAM info group $groupname | grep "owner:" | cut -f2,3 -d" " | sed -e 's/^/<\/li><li>/g' >> $OUTPUT
 	eval $PYTHON $GAM info group $groupname | grep "member:" | cut -f2,3 -d" " | sed -e 's/^/<\/li><li>/g' >> $OUTPUT
 	echo "</li></ul>"$'\n' >> $OUTPUT
