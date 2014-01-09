@@ -84,7 +84,7 @@ fi
 #eval $PYTHON $GAM print groups name description members owners > $LIST_OF_GROUPS
 
 ## fetch the list of the active groups
-eval $PYTHON $GAM print groups name > $LIST_OF_GROUPS 2>/dev/null
+eval $PYTHON $GAM print groups name aliases> $LIST_OF_GROUPS 2>/dev/null
 
 # parse the list of groups
 OLDIFS=$IFS
@@ -104,9 +104,14 @@ echo "<p>This list is generated using the script $0 on the host `hostname`</p>" 
 echo "<div class="message-content"><strong>If this page is not showing any list most probably the issue is with outdated Time Settings of the `hostname` therefore the Google servers refuse the OAUTH2 connection.'.</strong></div>" >> $OUTPUT
 echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
 
-while read groupname name
+# takes in input the LIST_OF_GROUPS (which is a CSV list)
+while read groupname name alias1
 do
 	echo "<br/>"$'\n'"<strong>$name</strong> - <a href=\"mailto:$groupname\">$groupname</a>" >> $OUTPUT
+        echo '<ul>' >> $OUTPUT
+        alias=$alias1
+	echo "<li><a href=\"mailto:$alias\">$alias</a></li>" >> $OUTPUT
+	echo "</ul>"$'\n' >> $OUTPUT
         echo '<ul>' >> $OUTPUT
 	# echo "<a href=\"mailto:$groupname\">$groupname</a>" >> $OUTPUT
 	eval $PYTHON $GAM info group $groupname | grep "owner:" | cut -f2,3 -d" " | sed -e 's/^/<li>/g;s/$/<\/li>/g' >> $OUTPUT
