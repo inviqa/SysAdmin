@@ -83,8 +83,13 @@ fi
 # Fetch of the list of available groups 
 #eval $PYTHON $GAM print groups name description members owners > $LIST_OF_GROUPS
 
-## fetch the list of the active groups
+## fetch the list of the active groups and aliases
 eval $PYTHON $GAM print groups name aliases > $LIST_OF_GROUPS 2>/dev/null
+
+# according to the parameter passed to GAM the column descriptor may change
+# we will use column descriptor as a patter to indentify the point from which is the groups are listed in the List of Groups file, in fact if we ask to show the aliases the aliases will ALSO printed before the list of groups but this is a duplicate information that we don't need
+COLUMN_DESCRIPTOR="Email,Name"
+
 
 # parse the list of groups
 OLDIFS=$IFS
@@ -93,7 +98,10 @@ IFS=,
 [ ! -f $LIST_OF_GROUPS ] && { echo "$LIST_OF_GROUPS file not found"; exit 99; }
 
 # remove the header (first line) from the CSV file
-sed '1d' $LIST_OF_GROUPS > $LIST_OF_GROUPS.tmp
+# sed '1d' $LIST_OF_GROUPS > $LIST_OF_GROUPS.tmp
+
+# remove all the lines before the colum descriptor dn the colum descriptor itself
+ sed -e "1,/$COLUMN_DESCRIPTOR/d"  $LIST_OF_GROUPS > $LIST_OF_GROUPS.tmp
 mv $LIST_OF_GROUPS.tmp $LIST_OF_GROUPS
 
 # start populating the 'page' with generic information
