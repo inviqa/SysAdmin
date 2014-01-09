@@ -108,18 +108,20 @@ echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
 # takes in input the LIST_OF_GROUPS (which is a CSV list)
 while read groupname name aliases
 do
-        # transform the aliases var in a list, replacing the spaces with commas
-        #LIST_OF_ALIASES=${aliases// /,}
-	
         # prints the head of the section describing a group
         echo "<br/>"$'\n'"<strong>$name</strong> - <a href=\"mailto:$groupname\">$groupname</a>" >> $OUTPUT
-        
+  
         # start printing the list of aliases if any
         # checks that the LIST_OF_ALIASES is NOT an empty list or contains only spaces
         if [ ! -z "$aliases" -a "$aliases"!=" " ]; then
+          # transform the aliases list replacing the spaces with commas, because the IFS is set to ','
+          aliases=${aliases// /,}
+  
+          # this list must be transformed in a array
+          read -a LIST_OF_ALIASES <<< "$aliases"
+      
           echo '<ul>' >> $OUTPUT
-          
-          read -a $LIST_OF_ALIASES <<< "$aliases"
+  
           for alias in "${LIST_OF_ALIASES[@]}"
           do
             echo "<li>alias: <a href=\"mailto:$alias\">$alias</a></li>" >> $OUTPUT
