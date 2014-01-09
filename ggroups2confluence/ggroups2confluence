@@ -109,19 +109,21 @@ echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
 while read groupname name aliases
 do
         # transform the aliases var in a list, replacing the spaces with commas
-        LIST_OF_ALIASES=${aliases// /,}
+        #LIST_OF_ALIASES=${aliases// /,}
 	
         # prints the head of the section describing a group
         echo "<br/>"$'\n'"<strong>$name</strong> - <a href=\"mailto:$groupname\">$groupname</a>" >> $OUTPUT
         
         # start printing the list of aliases if any
         # checks that the LIST_OF_ALIASES is NOT an empty list or contains only spaces
-        if [ ! -z "$LIST_OF_ALIASES" -a "$LIST_OF_ALIASES"!=" " ]; then
+        if [ ! -z "$aliases" -a "$aliases"!=" " ]; then
           echo '<ul>' >> $OUTPUT
-          while read alias
+          
+          read -a $LIST_OF_ALIASES <<< "$aliases"
+          for alias in "${LIST_OF_ALIASES[@]}"
           do
             echo "<li>alias: <a href=\"mailto:$alias\">$alias</a></li>" >> $OUTPUT
-	  done < $LIST_OF_ALIASES
+	  done
           echo "</ul>"$'\n' >> $OUTPUT
         fi
         # start printing the list of owners and members
