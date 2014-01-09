@@ -84,7 +84,7 @@ fi
 #eval $PYTHON $GAM print groups name description members owners > $LIST_OF_GROUPS
 
 ## fetch the list of the active groups
-eval $PYTHON $GAM print groups name aliases> $LIST_OF_GROUPS 2>/dev/null
+eval $PYTHON $GAM print groups name aliases > $LIST_OF_GROUPS 2>/dev/null
 
 # parse the list of groups
 OLDIFS=$IFS
