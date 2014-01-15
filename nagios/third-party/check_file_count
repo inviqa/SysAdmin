@@ -1,0 +1,352 @@
+#!/bin/sh
+#
+# <check_file_count>
+# Version 0.8 (10 November 2009)
+#
+# Copyright (C) >2008 Marco Saglibene <oss@baseware.nl>
+#
+# Author: Marco Saglibene <oss@baseware.nl>
+#
+# This is a Nagios plugin which checks the number of files and/or
+# directories in some directory. If you want you can include
+# subdirectories (and -files) in the check.
+# It produces warnings and criticals if the count becomes too high
+# or too low, depending on the user input. It can also be set up
+# to produce a critical if the count is not equal to a given value.
+# If you want it can produce performance output for graphs.
+# 
+# This plugin can be handy for monitoring your FTP or SMB. Or just
+# to see whether some program is cleaning up it's logfiles and so on.
+#
+# It has been tested on Nagios 3.x and PNP4Nagios 0.4.x (works with
+# default template or, a bit nicer, with the check_file_count
+# template) but because of it's simplicity should run on any version.
+#
+# The plugin has been build on GNU/Linux OpenSUSE 11.1 but should
+# work happily on any system that understands, of course, /bin/sh
+# and the commands "find" and "wc".
+# 
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; the latest version
+# of the GNU General Public License is applicable.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#                
+# You should have received a copy of the GNU General Public License
+# along with this program, or with Nagios.
+# If not, see <http://www.gnu.org/licenses/>.
+#
+########################################################################
+
+TYPE=$1          #set file, dir or both (-t=file, -t=dir, -t=all
+SUBS=$2          #include subdirs (-s=yes, -s=no)
+WARNTYPE=$3      #warn if too low or too high (-wt=low, -wt=high, -wt=equal)
+PARMW=$4         #set -w for $WARN
+WARN=$5          #set numeric value for $WARN
+PARMC=$6         #set -c for $CRIT$
+CRIT=$7          #set numeric value for $CRIT
+PERF=$8          #include performance data for graphs (-p=yes -p=no)
+DIR=$9           #set dir to check
+
+# Every time some error occurs, print the USAGE of this plugin.
+USAGE="echo -e \n\
+Usage: $0 -t=<file|dir|all> -s=<yes|no> -wt=<low|high|equal> -w <warning> -c <critical> -p=<yes|no> <directory_to_check>\n\
+\n\
+** Caution: The sequence AND the presence of the options is mandatory for this plugin to work !! **\n\
+\n\
+-h\tFor more detailed help.\n\
+--help\tFor more detailed help.\n\
+\n\
+<check_file_count>  Copyright (C) >2008  Marco Saglibene\n\
+This program comes with ABSOLUTELY NO WARRANTY\n\
+This is free software, and you are welcome to redistribute it under certain conditions.\n\
+"
+
+# If -h or --help is given, provide user with detailed help, and exit with unknown.
+if [ "$TYPE" == "-h" -o "$TYPE" == "--help" ]; then
+echo -e ""
+echo -e "\t\t*** Plugin: <check_file_count> ***"
+$USAGE
+echo -e "-t=\tDefines the type to check. Valid options are: -t=file to count\n\
+\tfiles only, -t=dir to count directories only and -t=all to count\n\
+\tfiles and directories."
+echo -e "-s=\tDefines whether to include subdirectories. Valid options are: -s=yes\n\
+\tto include and -s=no to exclude subdirectories."
+echo -e "-wt=\tDefines the warntype. For wt=low a warning if the count gets too low.\n\
+\tFor wt=high a warning if the count gets too high. For wt=equal\n\
+\tsee example below."
+echo -e "-w\tDefines a numeric value that triggers a warning. No equal sign (=)\n\
+\tmust be inserted ! E.g. -w 5 causes a warning if the number of\n\
+\tfiles/directories (depending on your -t= and -s= values) is equal\n\
+\tto 5 and higher or lower (depending on -wt=)."
+echo -e "-c\tDefines a numeric value that triggers a critical. No equal sign (=)\n\
+\tmust be inserted ! E.g. -w 5 causes a critical if the number of\n\
+\tfiles/directories (depending on your -t= and -s= values) is equal\n\
+\tto 5 and higher or lower (depending on -wt=)."
+echo -e "-p=\tDefines if it should give performance data or not, -p=yes gives\n\
+\tperformance data, -p=no does not."
+echo -e ""
+echo -e "<directory_to_check> should be a valid directory on the system. Any mounted\n\
+filesystem should work. Note: Make sure that the user that runs Nagios has at\n\
+least reading rights for the directory (and subdirectories) to check."
+echo -e ""
+echo -e ""
+echo -e "Example: $0 -t=all -s=yes -wt=high -w 10 -c 15 -p=yes /srv/ftp"
+echo -e ""
+echo -e "If the total number of files and directories in /srv/ftp and it's\n\
+subdirectories gets too high, it will produce a warning if the number\n\
+gets at 10 or more. It will produce a critical if the number gets to\n\
+15 or more. It will produce performance output for graphs as well."
+echo -e ""
+echo -e "Example for wt=equal: $0 -t=file -s=no -wt=equal -w 5 -c 5 -p=no /var/log/somelog"
+echo -e ""
+echo -e "If the number of files in /var/log/somelog is NOT equal to 5, it will\n\
+produce a critical. So if the count is 4 or less or 6 or more a critical\n\
+status will be produced. In this situation only a critical is possible, so\n\
+you must set the values for -w and -c to the SAME value."
+echo -e ""
+ exit 3
+#If not all or if too many options are given, exit with unknown.
+   else if [ $# != 9 ]; then
+     echo -e "You must use *all 9* options, and you must use them in the *right order* (you used $# options)..."
+     $USAGE
+      exit 3
+        fi
+fi
+#If -t= doesn't make sense, exit with unknown.
+if [ $TYPE != "-t=file" -a $TYPE != "-t=dir" -a $TYPE != "-t=all" ]; then
+   echo -e "I don't understand what you mean with "$TYPE"..."
+   $USAGE
+    exit 3
+fi
+#If -s= doesn't make sense, exit with unknown.
+if [ $SUBS != "-s=yes" -a $SUBS != "-s=no" ]; then
+   echo -e "I don't understand what you mean with "$SUBS"..."
+   $USAGE
+    exit 3
+fi
+#If -wt= doesn't make sense, exit with unknown.
+if [ $WARNTYPE != "-wt=low" -a $WARNTYPE != "-wt=high" -a $WARNTYPE != "-wt=equal" ]; then
+   echo -e "I don't understand what you mean with "$WARNTYPE"..."
+   $USAGE
+    exit 3
+fi
+#If -w isn't (correct) given, exit with unknown.
+if [ $PARMW != "-w" ]; then
+   echo -e "I don't understand what you mean with "$PARMW"..."
+   $USAGE
+    exit 3
+fi
+#If -c isn't (correct) given, exit with unknown.
+if [ $PARMC != "-c" ]; then
+   echo -e "I don't understand what you mean with "$PARMC"..."
+   $USAGE
+    exit 3
+fi
+#If -p= doesn't make sense, exit with unknown.
+if [ $PERF != "-p=yes" -a $PERF != "-p=no" ]; then
+   echo -e "I don't understand what you mean with "$PERF"..."
+   $USAGE
+    exit 3
+fi
+
+#Determine whether warn and crit values are numeric.
+TESTWARN=`echo "$WARN" | egrep "^[0-9]+$"`
+TESTCRIT=`echo "$CRIT" | egrep "^[0-9]+$"`
+
+#If warn doesn't make sense, exit with unknown.
+if [ $TESTWARN ]; then
+TESTEDWARN=$TESTWARN
+else
+ echo -e "You set $PARMW to $WARN which is not a positive numeric whole value. That doesn't make sense..."
+ $USAGE
+  exit 3
+fi
+#If crit doesn't make sense, exit with unknown.
+if [ $TESTCRIT ]; then
+TESTEDCRIT=$TESTCRIT
+else
+ echo -e "You set $PARMC to $CRIT which is not a positive numeric whole value. That doesn't make sense..."
+ $USAGE
+  exit 3
+fi
+#If warn and crit levels are incompatible with warntype, exit with unknown.
+if [ $WARNTYPE == "-wt=low" -a $TESTEDWARN -lt $TESTEDCRIT ]; then
+   echo -e "You set warntype to $WARNTYPE, so $PARMW $TESTEDWARN must be less than $PARMC $TESTEDCRIT to make sense..."
+   $USAGE
+    exit 3
+fi
+if [ $WARNTYPE == "-wt=high" -a $TESTEDWARN -gt $TESTEDCRIT ]; then
+   echo -e "You set warntype to $WARNTYPE, so $PARMW $TESTEDWARN must be greater than $PARMC $TESTEDCRIT to make sense..."
+   $USAGE
+    exit 3
+fi
+if [ $WARNTYPE == "-wt=equal" -a $TESTEDWARN != $TESTEDCRIT ]; then
+   echo -e "You set warntype to $WARNTYPE, so $PARMW $TESTEDWARN and $PARMC $TESTEDCRIT must be equal to make sense..."
+   $USAGE
+    exit 3
+fi
+#Determine if the dir to be checked really exists, if not, exit with critical.
+if [ -d $DIR ]; then
+TESTEDDIR=$DIR
+else
+ echo -e "Critical: directory $DIR does not exist (ANYMORE?), or the nagios user has no read rights for it..."
+ $USAGE
+  exit 2
+fi
+
+#Now all false options should be filtered out, start sorting what the user wants.
+
+#Check to include subs or not, and what to count: dirs, files or both.
+if [ $SUBS == "-s=yes" -a $TYPE == "-t=file" ]; then
+FILECOUNT=$(echo `find $TESTEDDIR -depth -nowarn -type f | wc -l`)
+FILENUMBER=$FILECOUNT
+DIRNUMBER="0"
+ else if [ $SUBS == "-s=yes" -a $TYPE == "-t=dir" ]; then
+FILECOUNT=$(expr "`find $TESTEDDIR -depth -nowarn -type d | wc -l`" - 1)
+FILENUMBER="0"
+DIRNUMBER=$FILECOUNT
+  else if [ $SUBS == "-s=yes" -a $TYPE == "-t=all" ]; then
+FILECOUNT=$(expr "`find $TESTEDDIR -depth -nowarn | wc -l`" - 1)
+FILENUMBER=$(echo `find $TESTEDDIR -depth -nowarn -type f | wc -l`)
+DIRNUMBER=$(expr "`find $TESTEDDIR -depth -nowarn -type d | wc -l`" - 1)
+   else if [ $SUBS == "-s=no" -a $TYPE == "-t=file" ]; then
+FILECOUNT=$(echo `find $TESTEDDIR -nowarn -type f | wc -l`)
+FILENUMBER=$FILECOUNT
+DIRNUMBER="0"
+    else if [ $SUBS == "-s=no" -a $TYPE == "-t=dir" ]; then
+FILECOUNT=$(expr "`find $TESTEDDIR -nowarn -type d | wc -l`" - 1)
+FILENUMBER="0"
+DIRNUMBER=$FILECOUNT
+     else if [ $SUBS == "-s=no" -a $TYPE == "-t=all" ]; then
+FILECOUNT=$(expr "`find $TESTEDDIR -nowarn | wc -l`" - 1)
+FILENUMBER=$(echo `find $TESTEDDIR -nowarn -type f | wc -l`)
+DIRNUMBER=$(expr "`find $TESTEDDIR -nowarn -type d | wc -l`" - 1)
+fi
+fi
+fi
+fi
+fi
+fi
+#Check whether to output performance data or not.
+if [ $PERF == "-p=yes" ]; then
+PERFDATA="| Total=$FILECOUNT"Count";$TESTEDWARN;$TESTEDCRIT Files=$FILENUMBER"Files" 'Directories'=$DIRNUMBER"Directories""
+else
+PERFDATA=""
+#fi
+#fi
+fi
+#Check whether low or high should give a warn.
+if [ $WARNTYPE == "-wt=low" ]; then
+WARNIF="-le"
+ else if [ $WARNTYPE == "-wt=high" ]; then
+WARNIF="-ge"
+  else if [ $WARNTYPE == "-wt=equal" ]; then
+WARNIF="!="
+fi
+fi
+fi
+
+#Now we know the filecount, check it with the values and give an exit of OK, warning or critical.
+#First see if status is critical.
+#For -t=file and -wt=<high|low> options.
+if [ $FILECOUNT $WARNIF $TESTEDCRIT -a $TYPE == "-t=file" -a $WARNTYPE != "-wt=equal" ]; then
+ echo "Critical: Number of files in $TESTEDDIR is $FILECOUNT (Warn=$TESTEDWARN, Crit=$TESTEDCRIT) $PERFDATA"
+ exit 2
+#For -t=file and -wt=equal opions.
+  else if [ $FILECOUNT $WARNIF $TESTEDCRIT -a $TYPE == "-t=file" -a $WARNTYPE == "-wt=equal" ]; then
+   echo "Critical: Number of files in $TESTEDDIR is not equal to $TESTEDCRIT, the count is $FILECOUNT $PERFDATA"
+   exit 2
+#For -t=dir and -wt=<high|low> options.
+  else if [ $FILECOUNT $WARNIF $TESTEDCRIT -a $TYPE == "-t=dir" -a $WARNTYPE != "-wt=equal" ]; then
+   echo "Critical: Number of directories in $TESTEDDIR is $FILECOUNT (Warn=$TESTEDWARN, Crit=$TESTEDCRIT) $PERFDATA"
+   exit 2
+#For -t=dir and -wt=equal options.
+  else if [ $FILECOUNT $WARNIF $TESTEDCRIT -a $TYPE == "-t=dir" -a $WARNTYPE == "-wt=equal" ]; then
+   echo "Critical: Number of directories in $TESTEDDIR is not equal to $TESTEDCRIT, the count is $FILECOUNT $PERFDATA"
+   exit 2
+#For -t=all and -wt=<high|low> options.
+  else if [ $FILECOUNT $WARNIF $TESTEDCRIT -a $TYPE == "-t=all" -a $WARNTYPE != "-wt=equal" ]; then
+   echo "Critical: Number of files and directories in $TESTEDDIR is $FILECOUNT (Warn=$TESTEDWARN, Crit=$TESTEDCRIT) Files=$FILENUMBER, Directories=$DIRNUMBER $PERFDATA"
+   exit 2
+#For -t=all and -wt=equal options.
+  else if [ $FILECOUNT $WARNIF $TESTEDCRIT -a $TYPE == "-t=all" -a $WARNTYPE == "-wt=equal" ]; then
+   echo "Critical: Number of files and directories in $TESTEDDIR is not equal to $TESTEDCRIT, the count is $FILECOUNT (Files=$FILENUMBER, Directories=$DIRNUMBER) $PERFDATA"
+   exit 2
+#Now check for warning.
+#For -t=file and -wt=<high|low> options.
+  else if [ $FILECOUNT $WARNIF $TESTEDWARN -a $TYPE == "-t=file" -a $WARNTYPE != "-wt=equal" ]; then
+   echo "Warning: Number of files in $TESTEDDIR is $FILECOUNT (Warn=$TESTEDWARN, Crit=$TESTEDCRIT) $PERFDATA"
+   exit 1
+#For -t=file and -wt=equal opions.
+  else if [ $FILECOUNT $WARNIF $TESTEDWARN -a $TYPE == "-t=file" -a $WARNTYPE == "-wt=equal" ]; then
+   echo "Warning: Number of files in $TESTEDDIR is not equal to $TESTEDCRIT, the count is $FILECOUNT $PERFDATA"
+   exit 1
+#For -t=dir and -wt=<high|low> options.
+  else if [ $FILECOUNT $WARNIF $TESTEDWARN -a $TYPE == "-t=dir" -a $WARNTYPE != "-wt=equal" ]; then
+   echo "Warning: Number of directories in $TESTEDDIR is $FILECOUNT (Warn=$TESTEDWARN, Crit=$TESTEDCRIT) $PERFDATA"
+   exit 1
+#For -t=dir and -wt=equal options.
+  else if [ $FILECOUNT $WARNIF $TESTEDWARN -a $TYPE == "-t=dir" -a $WARNTYPE == "-wt=equal" ]; then
+   echo "Warning: Number of directories in $TESTEDDIR is not equal to $TESTEDCRIT, the count is $FILECOUNT $PERFDATA"
+   exit 1
+#For -t=all and -wt=<high|low> options.
+  else if [ $FILECOUNT $WARNIF $TESTEDWARN -a $TYPE == "-t=all" -a $WARNTYPE != "-wt=equal" ]; then
+   echo "Warning: Number of files and directories in $TESTEDDIR is $FILECOUNT (Warn=$TESTEDWARN, Crit=$TESTEDCRIT) Files=$FILENUMBER, Directories=$DIRNUMBER $PERFDATA"
+   exit 1
+#For -t=all and -wt=equal options.
+  else if [ $FILECOUNT $WARNIF $TESTEDWARN -a $TYPE == "-t=all" -a $WARNTYPE == "-wt=equal" ]; then
+   echo "Warning: Number of files and directories in $TESTEDDIR is not equal to $TESTEDCRIT, the count is $FILECOUNT (Files=$FILENUMBER, Directories=$DIRNUMBER) $PERFDATA"
+   exit 1
+#What remains now is OK.
+#For -t=file and -wt=<high|low> options.
+  else if [ $TYPE == "-t=file" -a $WARNTYPE != "-wt=equal" ]; then
+   echo "OK: Number of files in $TESTEDDIR is $FILECOUNT (Warn=$TESTEDWARN, Crit=$TESTEDCRIT) $PERFDATA"
+   exit 0
+#For -t=file and -wt=equal opions.
+  else if [ $TYPE == "-t=file" -a $WARNTYPE == "-wt=equal" ]; then
+   echo "OK: Number of files in $TESTEDDIR is equal to $TESTEDCRIT $PERFDATA"
+   exit 0
+#For -t=dir and -wt=<high|low> options.
+  else if [ $TYPE == "-t=dir" -a $WARNTYPE != "-wt=equal" ]; then
+   echo "OK: Number of directories in $TESTEDDIR is $FILECOUNT (Warn=$TESTEDWARN, Crit=$TESTEDCRIT) $PERFDATA"
+   exit 0
+#For -t=dir and -wt=equal options.
+  else if [ $TYPE == "-t=dir" -a $WARNTYPE == "-wt=equal" ]; then
+   echo "OK: Number of directories in $TESTEDDIR is equal to $TESTEDCRIT $PERFDATA"
+   exit 0
+#For -t=all and -wt=<high|low> options.
+  else if [ $TYPE == "-t=all" -a $WARNTYPE != "-wt=equal" ]; then
+   echo "OK: Number of files and directories in $TESTEDDIR is $FILECOUNT (Warn=$TESTEDWARN, Crit=$TESTEDCRIT) Files=$FILENUMBER, Directories=$DIRNUMBER $PERFDATA"
+   exit 0
+#For -t=all and -wt=equal options.
+  else if [ $TYPE == "-t=all" -a $WARNTYPE == "-wt=equal" ]; then
+   echo "OK: Number of files and directories in $TESTEDDIR is equal to $TESTEDCRIT (Files=$FILENUMBER, Directories=$DIRNUMBER) $PERFDATA"
+   exit 0
+#If something has not gone out with an exit status by now, something unforeseen has happened... Exit with unknown.
+   else
+    echo "Sorry, something went terribly wrong, please file a detailed bug report to the author..."
+    exit 3
+fi
+fi                      
+fi
+fi
+fi
+fi
+fi
+fi
+fi
+fi
+fi
+fi
+fi
+fi
+fi
+fi
+fi
+fi

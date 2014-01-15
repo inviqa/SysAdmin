@@ -1,7 +1,7 @@
 #!/bin/sh
 
-RSA_PUB_KEY_URL=""
-THIRD_PARTY_UNPACKAGED_SCRIPTS_URL=""
+RSA_PUB_KEY_URL="https://raw.github.com/inviqa/SysAdmin/master/nagios/inviqa_nagios_user_rsa_public_key.pub"
+THIRD_PARTY_UNPACKAGED_SCRIPTS_URL="https://raw.github.com/inviqa/SysAdmin/master/nagios/third-party"
 # creation of a nagios user on each server
 adduser nagios --disabled-password
 mkdir /home/nagios/.ssh
