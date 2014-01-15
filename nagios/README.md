@@ -1,16 +1,21 @@
 #Description
-nagios_host_setup.sh is a bash script that will set up the basic requirements for nagios montiron on a host server that we want to monitor.
 IT IS NOT A SCRIPT FOR A NAGIOS SERVER SETUP
-- it creates the user
-- upload the nagios server user RESA Public Key
-- Installs the basic nagios plugins and dependant libraries
+
+nagios_host_setup.sh is a bash script that will set up a nagios host server with basic requirements for nagios monitoring.
+
+- Creates the nagios user and home directory.
+- Uploads the Inviqa server's nagios RSA Public Key.
+- Installs the basic nagios plugins and libraries to run the check scripts.
 
 #Requirements
-The script is ment to run on Centos 5.x
-requires curl for the download of some script
+The script is ment to run on Centos 5.x servers.
+It requires curl for the download of some script.
 
 #Usage
-It's advised to place the script in the /tmp folder
+- It's advised to place the script in the /tmp folder.
+- One downloaded you may need give exec permissions on the nagios_host_setup.sh file.
+- Run the script as root or with sudo.
+- The script doesn't need any parameter at the moment.
 
 #TODO
 - add the autodetection of the Centos version or Debian based distributiions
