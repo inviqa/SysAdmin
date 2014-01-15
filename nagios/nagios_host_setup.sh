@@ -29,7 +29,7 @@ chown nagios:nagios /home/nagios/bin
 # Installation of the System Memory check script
 curl -o /home/nagios/bin/check_mem.pl $THIRD_PARTY_UNPACKAGED_SCRIPTS_URL/check_mem.pl
 chown nagios:nagios /home/nagios/bin/check_mem.pl
-chmod 750  /home/nagios/bin/check_mem.pl
+chmod 755  /home/nagios/bin/check_mem.pl
 
 # linking the installed check scripts to the nagios's home/bin folder as expected by the nagios server
 ln -f -s /usr/lib64/nagios/plugins/check_disk /home/nagios/bin/check_disk
