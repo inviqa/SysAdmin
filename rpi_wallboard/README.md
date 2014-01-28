@@ -51,13 +51,15 @@ sdram_freq=450
 over_voltage=2
 gpu_mem=32
 
- #for more options see http://elinux.org/RPi_config.txt
+copy 
 
-save the file, and gracefully unmount the SD card, then plug it into the RPi and turn the RPi on with a keyboard and screen connected.
+Save the file, and gracefully unmount the SD card, then plug it into the RPi and turn the RPi on with a keyboard and screen connected.
+
+#Network Setup: Wifi
+The WiFi on the RPi is quite bad, but with the right workarounds it will do the job, as a backup (or preferred solution) you can make use of a Ethernet connection.
 
 #Usage
-After following the Setup instructins, turn on the RPi, log into it, then run the wallboard_setup.sh script as 'root' or with sudo.
-The rester the RPi.
+Log into the RPi with the user ‘pi' and the password ‘raspberry’ and run the /boot/wallboard_setup.sh script 'root' or with sudo.
 
 #License and Author
 Copyright (C) 2012 - 2013 Inviqa UK Ltd
