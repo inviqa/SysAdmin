@@ -51,7 +51,7 @@ sdram_freq=450
 over_voltage=2
 gpu_mem=32
 
-# for more options see http://elinux.org/RPi_config.txt
+ #for more options see http://elinux.org/RPi_config.txt
 
 save the file, and gracefully unmount the SD card, then plug it into the RPi and turn the RPi on with a keyboard and screen connected.
 
