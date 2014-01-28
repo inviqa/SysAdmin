@@ -16,25 +16,26 @@ In this specific case, for Inviqa, the Wallboard is preconfigured to login and s
 This instructions can be easily adapted to be run on a Linux host.
 
 
-Install the latest Raspbian
-Download the official installation image
-~$ curl --progress-bar -o 2014-01-07-wheezy-raspbian.zip http://director.downloads.raspberrypi.org/raspbian/images/raspbian-2014-01-09/2014-01-07-wheezy-raspbian.zip
+```bash
+# Install the latest Raspbian
+# Download the official installation image
+curl --progress-bar -o 2014-01-07-wheezy-raspbian.zip http://director.downloads.raspberrypi.org/raspbian/images/raspbian-2014-01-09/2014-01-07-wheezy-raspbian.zip
 
-unzip the raspbian image in your working directory
+# unzip the raspbian image in your working directory
 unzip  2014-01-07-wheezy-raspbian.zip
 
-Insert the SD card in the SD read of your computer.
-Run ‘diskutil’ from command-line to learn what is the device name of the SD card (which we assume is ‘/dev/disk1’) and it’s partitions.
-~$ diskutil —list
+# Insert the SD card in the SD read of your computer.
+# Run ‘diskutil’ from command-line to learn what is the device name of the SD card (which we assume is ‘/dev/disk1’) and it’s partitions.
+diskutil —list
 
-Unmount all the possibly mounted partitions of /dev/disk# (mind that the disk won’t be ejected)
-~$ diskutil unmountDisk /dev/disk1
+# Unmount all the possibly mounted partitions of /dev/disk# (mind that the disk won’t be ejected)
+diskutil unmountDisk /dev/disk1
 
-Dump the raspbian image into the SD card which for which we will use the RAW interface ‘/dev/rdisk1’ so that the dump will be quite fast
+# Dump the raspbian image into the SD card which for which we will use the RAW interface ‘/dev/rdisk1’ so that the dump will be quite fast
 
-~$ sudo dd if=2014-01-07-wheezy-raspbian.img of=/dev/rdisk1 bs=2048k
+sudo dd if=2014-01-07-wheezy-raspbian.img of=/dev/rdisk1 bs=2048k
 You can monitor the dumping progress via Activity Monitor (on a Mac), filtering for the dd process.
-
+```
 Copy the config.txt in the SD card BOOT partition.
 Copy the wallboard_setup.sh script in the SD card BOOT partition.
 
