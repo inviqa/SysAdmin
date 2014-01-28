@@ -35,3 +35,7 @@ ifdown wlan0 && sleep 5 && ifup wlan0
 apt-get -q update && apt-get -q upgrade
 apt-get -q install avahi-daemon x11vnc chromium vim
 
+# the WiFi on the RPi is quite bad, but with the right workarounds it will do the job,
+# as a backup (or preferred solution) you can make use of a Ethernet connection.
+
+
