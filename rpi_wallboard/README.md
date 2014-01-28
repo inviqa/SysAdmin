@@ -35,28 +35,13 @@ Dump the raspbian image into the SD card which for which we will use the RAW int
 ~$ sudo dd if=2014-01-07-wheezy-raspbian.img of=/dev/rdisk1 bs=2048k
 You can monitor the dumping progress via Activity Monitor (on a Mac), filtering for the dd process.
 
-When the copying process is finished, before plugging the SD card into the RPi, open the ‘config.txt’ file that is placed in the BOOT partition of the newly imaged SD card, and make sure that it contains the following settings:
+Copy the config.txt in the SD card BOOT partition.
+Copy the wallboard_setup.sh script in the SD card BOOT partition.
 
-disable_overscan=1
-framebuffer_depth=32
-framebuffer_ignore_alpha=1
-hdmi_pixel_encoding=1
-hdmi_force_hotplug=1
-config_hdmi_boost=4
-disable_overscan=1
-arm_freq=900
-
-core_freq=250
-sdram_freq=450
-over_voltage=2
-gpu_mem=32
-
-copy 
-
-Save the file, and gracefully unmount the SD card, then plug it into the RPi and turn the RPi on with a keyboard and screen connected.
+Gacefully unmount the SD card, then plug it into the RPi and turn the RPi on with a keyboard, mouse and screen connected (we need the keyboard & mouse just for the first run).
 
 #Network Setup: Wifi
-The WiFi on the RPi is quite bad, but with the right workarounds it will do the job, as a backup (or preferred solution) you can make use of a Ethernet connection.
+The WiFi on the RPi is quite bad, but with the right workarounds (implemented in the script) it will do the job, as a backup (or preferred solution) you can make use of a Ethernet connection.
 
 #Usage
 Log into the RPi with the user ‘pi' and the password ‘raspberry’ and run the /boot/wallboard_setup.sh script 'root' or with sudo.
