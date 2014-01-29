@@ -52,6 +52,13 @@ The WiFi on the RPi is quite bad, but with the right workarounds (implemented in
 #Usage
 Log into the RPi with the user ‘pi' and the password ‘raspberry’ and run the /boot/wallboard_setup.sh script 'root' or with sudo.
 
+#TODO
+* automate installation of config.txt
+* fix duplicated wlan0 definition if the script is run twice
+* fix duplicated rc.local patching if the script is run twice
+* move rc_local.parch to /boot
+* before downloading the files from git make sure that they are not already in the current directory (or in boot)
+
 #License and Author
 Copyright (C) 2012 - 2013 Inviqa UK Ltd
 
