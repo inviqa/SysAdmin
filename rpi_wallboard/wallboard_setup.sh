@@ -40,8 +40,11 @@ ifdown wlan0 && sleep 5 && ifup wlan0
 echo "Updating the system"
 # install the avahi-daemon to be able to access the RPi as wallboard.local
 apt-get -q update && apt-get -q upgrade
-echo "Installing Avahi, VNC and Chromium"
-apt-get -q install avahi-daemon x11vnc chromium vim
+echo "Installing Avahi Daemon, VNC and Chromium"
+apt-get -q install avahi-daemon x11vnc chromium vim chkconfig
+chkconfig -a avahi-daemon --level 2345 --deps rc.local 2> /dev/null
+#makes sure that avahi-daemon is started when the internet connection is up and running (after the rc.local script is run)
+mv /etc/rc2.d/S03avahi-daemon /etc/rc2.d/S06avahi-daemon
 
 # the WiFi on the RPi is quite bad, but with the right workarounds it will do the job,
 # as a backup (or preferred solution) you can make use of a Ethernet connection.
