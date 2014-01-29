@@ -41,6 +41,7 @@ sudo dd if=2014-01-07-wheezy-raspbian.img of=/dev/rdisk1 bs=2048k
 You can monitor the dumping progress via Activity Monitor (on a Mac), filtering for the dd process.
 ```
 Copy the config.txt in the SD card BOOT partition.
+Copy the xinitrc in the SD card BOOT partition.
 Copy the wallboard_setup.sh script in the SD card BOOT partition.
 
 Gacefully unmount the SD card, then plug it into the RPi and turn the RPi on with a keyboard, mouse and screen connected (we need the keyboard & mouse just for the first run).
