@@ -29,7 +29,7 @@ while true; do
 	xwit -root -warp $( cat /sys/module/*fb*/parameters/fbwidth ) $( cat /sys/module/*fb*/parameters/fbheight )
         
         # starts thw x11vnc (VNC) session
-        x11vnc -logfile $HOME/.x11vnc.log -viewonly -shared -forever -rfbport 5900 -avahi -display :0 -usepw -bg
+        x11vnc -logfile $HOME/.x11vnc.log -viewonly -shared -forever -rfbport 5900 -avahi -display :0 -nopw -bg
 
 	# Start the window manager (remove "-use_cursor no" if you actually want mouse interaction)
 	#matchbox-window-manager -use_titlebar no -use_cursor no &
