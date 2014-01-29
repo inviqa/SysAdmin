@@ -7,6 +7,7 @@ RPI_HOSTNAME=wallboard
 WIFI_CHECK_URL="https://raw.github.com/marcomc/rpi_wifi_check/master/WiFi_Check"
 WIFI_CHECK_PATH="/usr/local/bin/WiFi_Check"
 WIFI_CHECK_CRONJOB="/etc/cron.d/WiFi_Check"
+SCHEDULED_SHUTDOWN_CRONJOB="/etc/cron.d/ScheduledShutdown"
 
 # setup the RPi’s hostname
 echo "Changing the hostname to $RPI_HOSTNAME"
@@ -64,10 +65,13 @@ echo "Setup a CRON job for WiFi_Check"
 cat <<'EOF' > $WIFI_CHECK_CRONJOB
 # Run Every 3 mins - Seems like ever min is over kill unless
 # this is a very common problem.
-# If once a min change */5 to *
-# once every 2 mins */5 to */2 ...
 #
-*/2 * * * *     root    /usr/local/bin/WiFi_Check 2>&1 > /var/log/wifi_check.log
+*/3 * * * *     root    /usr/local/bin/WiFi_Check 2>&1 > /var/log/wifi_check.log
+EOF
+
+cat <<'EOF' > $SCHEDULED_SHUTDOWN_CRONJOB
+# Shuts the system down everyday at 8pm
+00 20 * * *	root	/sbin/shutdown -h now 2>&1 >> /var/log/syslog
 EOF
 
 
