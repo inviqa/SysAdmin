@@ -12,8 +12,8 @@ In this specific case, for Inviqa, the Wallboard is preconfigured to login and s
 - Multi (shared) VNC screen sharing
 - Automatic Shutdown (best accompanied by a mains timer socket to turn it on periodically)
 
-#Setup from a Mac
-This instructions can be easily adapted to be run on a Linux host.
+#Setup
+This instructions are for Mac OSX but can be easily adapted to be run on a Linux host.
 
 ##Install the latest Raspbian
 
