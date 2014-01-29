@@ -5,6 +5,7 @@ SSID_PWD=$2
 SSID_PWD_CRYPT=`wpa_passphrase test password | grep psk | sed "/#/d" | cut -d'=' -f2`
 RPI_HOSTNAME=wallboard
 WIFI_CHECK_URL="https://raw.github.com/marcomc/rpi_wifi_check/master/WiFi_Check"
+RC_LOCAL_PATCH_URL="https://raw.github.com/inviqa/SysAdmin/master/rpi_wallboard/rc_local.patch"
 WIFI_CHECK_PATH="/usr/local/bin/WiFi_Check"
 WIFI_CHECK_CRONJOB="/etc/cron.d/WiFi_Check"
 SCHEDULED_SHUTDOWN_CRONJOB="/etc/cron.d/ScheduledShutdown"
@@ -61,7 +62,6 @@ curl -# -o $WIFI_CHECK_PATH $WIFI_CHECK_URL
 chmod 755 $WIFI_CHECK_PATH
 
 echo "Setup a CRON job for WiFi_Check"
-
 cat <<'EOF' > $WIFI_CHECK_CRONJOB
 # Run Every 3 mins - Seems like ever min is over kill unless
 # this is a very common problem.
@@ -69,9 +69,17 @@ cat <<'EOF' > $WIFI_CHECK_CRONJOB
 */3 * * * *     root    /usr/local/bin/WiFi_Check 2>&1 > /var/log/wifi_check.log
 EOF
 
+echo "Setup a CRON job for Scheduled Shutdown at 8pm"
 cat <<'EOF' > $SCHEDULED_SHUTDOWN_CRONJOB
 # Shuts the system down everyday at 8pm
 00 20 * * *	root	/sbin/shutdown -h now 2>&1 >> /var/log/syslog
 EOF
 
+echo "Patching /etc/rc.local to load the new xinitrc file" 
+# removed the 'exit 0' to allow to append the rc.local patch (which will reintroduce the 'exit 0')
+sed -i "/^exit 0/d" /etc/rc.local
+# download the patch
+curl -# -o /tmp/rc_local.patch $RC_LOCAL_PATCH_URL
+# apply the patch
+cat /tmp/rc_local.patch >>  /etc/rc.local
 
