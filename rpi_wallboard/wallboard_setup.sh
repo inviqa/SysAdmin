@@ -6,6 +6,7 @@ SSID_PWD_CRYPT=`wpa_passphrase test password | grep psk | sed "/#/d" | cut -d'='
 RPI_HOSTNAME=wallboard
 WIFI_CHECK_URL="https://raw.github.com/marcomc/rpi_wifi_check/master/WiFi_Check"
 RC_LOCAL_PATCH_URL="https://raw.github.com/inviqa/SysAdmin/master/rpi_wallboard/rc_local.patch"
+XINITRC_URL="https://raw.github.com/inviqa/SysAdmin/master/rpi_wallboard/xinitrc"
 WIFI_CHECK_PATH="/usr/local/bin/WiFi_Check"
 WIFI_CHECK_CRONJOB="/etc/cron.d/WiFi_Check"
 SCHEDULED_SHUTDOWN_CRONJOB="/etc/cron.d/ScheduledShutdown"
@@ -75,6 +76,13 @@ cat <<'EOF' > $SCHEDULED_SHUTDOWN_CRONJOB
 00 20 * * *	root	/sbin/shutdown -h now 2>&1 >> /var/log/syslog
 EOF
 
+if [ ! -f /boot/xinitrc ];then
+  echo "Installing /boot/xinitrc"
+  curl -# -o /boot/xinitrc $XINITRC_URL
+else
+  echo "/boot/xinitrc was already installed"
+fi
+
 echo "Patching /etc/rc.local to load the new xinitrc file" 
 # removed the 'exit 0' to allow to append the rc.local patch (which will reintroduce the 'exit 0')
 sed -i "/^exit 0/d" /etc/rc.local
@@ -82,4 +90,9 @@ sed -i "/^exit 0/d" /etc/rc.local
 curl -# -o /tmp/rc_local.patch $RC_LOCAL_PATCH_URL
 # apply the patch
 cat /tmp/rc_local.patch >>  /etc/rc.local
+# clean up
+rm /tmp/rc_local.patch
 
+echo "The RPi Wallboard setup is compleated"
+echo "restart the RPi using 'sudo shutdown -r now'
+# now
