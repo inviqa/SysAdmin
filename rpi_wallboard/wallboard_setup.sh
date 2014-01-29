@@ -9,7 +9,7 @@ WIFI_CHECK_PATH="/usr/local/bin/WiFi_Check"
 WIFI_CHECK_CRONJOB="/etc/cron.d/WiFi_Check"
 
 # setup the RPi’s hostname
-echo "Changing the hostname to RPI_HOSTNAME"
+echo "Changing the hostname to $RPI_HOSTNAME"
 echo $RPI_HOSTNAME > /etc/hostname
 
 # set up the WiFi card settings
@@ -33,20 +33,26 @@ EOF
 sed -i “s/put_here_the_ssid/$SSID/g” /etc/network/interfaces
 sed -i “s/put_here_the_crypted_ssid_password/$SSID_PWD_CRYPT/g” /etc/network/interfaces
 
-echo "Activating wlan0"
 # try to bring up the wlan0 device
+echo "Activating wlan0"
 ifdown wlan0 && sleep 5 && ifup wlan0
 
+echo "Removing lightdm-gtk-greater"
+apt-get -q remove lightdm-gtk-greeter
+
 echo "Updating the system"
-# install the avahi-daemon to be able to access the RPi as wallboard.local
 apt-get -q update && apt-get -q upgrade
+
+# install the avahi-daemon to be able to access the RPi as wallboard.local
 echo "Installing Lightdm, Avahi Daemon, VNC and Chromium"
 apt-get -q install avahi-daemon x11vnc chromium vim chkconfig lightdm
-chkconfig lightdm off
+
+#chkconfig lightdm off
 chkconfig -a avahi-daemon --level 2345 --deps rc.local 2> /dev/null
 #makes sure that avahi-daemon is started when the internet connection is up and running (after the rc.local script is run)
 mv /etc/rc2.d/S03avahi-daemon /etc/rc2.d/S06avahi-daemon
 
+echo "VNC is accessible at $HOSTNAME.local in ViewOnly mode with NO password"
 # the WiFi on the RPi is quite bad, but with the right workarounds it will do the job,
 # as a backup (or preferred solution) you can make use of a Ethernet connection.
 echo "Installing WiFi_Check"
@@ -63,3 +69,5 @@ cat <<'EOF' > $WIFI_CHECK_CRONJOB
 #
 */2 * * * *     root    /usr/local/bin/WiFi_Check 2>&1 > /var/log/wifi_check.log
 EOF
+
+

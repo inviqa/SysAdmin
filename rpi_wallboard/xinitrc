@@ -11,7 +11,8 @@ while true; do
 
 	# Clean out existing profile information
 	rm -rf /home/pi/.cache;
-	#rm -rf /home/pi/.config;
+	# preserves the Chromium settings for the Google Login that we will set at the first run
+        #rm -rf /home/pi/.config;
 	rm -rf /home/pi/.pki;
 
 	# Generate the bare minimum to keep Chromium happy!
