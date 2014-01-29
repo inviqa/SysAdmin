@@ -27,6 +27,7 @@ while true; do
 
 	# Hide the cursor (move it to the bottom-right, comment out if you want mouse interaction)
 	xwit -root -warp $( cat /sys/module/*fb*/parameters/fbwidth ) $( cat /sys/module/*fb*/parameters/fbheight )
+        
         # starts thw x11vnc (VNC) session
         x11vnc -logfile $HOME/.x11vnc.log -viewonly -shared -forever -rfbport 5900 -avahi -display :0 -usepw -bg
 
