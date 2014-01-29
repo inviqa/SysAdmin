@@ -33,22 +33,22 @@ iface wlan0 inet dhcp
      wpa-psk put_here_the_crypted_ssid_password
 EOF
 
-sed -i “s/put_here_the_ssid/$SSID/g” /etc/network/interfaces
-sed -i “s/put_here_the_crypted_ssid_password/$SSID_PWD_CRYPT/g” /etc/network/interfaces
+sed -i "s/put_here_the_ssid/$SSID/g" /etc/network/interfaces
+sed -i "s/put_here_the_crypted_ssid_password/$SSID_PWD_CRYPT/g" /etc/network/interfaces
 
 # try to bring up the wlan0 device
 echo "Activating wlan0"
 ifdown wlan0 && sleep 5 && ifup wlan0
 
 echo "Removing lightdm-gtk-greater"
-apt-get -q remove lightdm-gtk-greeter
+apt-get -qy remove lightdm-gtk-greeter
 
 echo "Updating the system"
-apt-get -q update && apt-get -q upgrade
+apt-get -qy update && apt-get -qy upgrade && apt-get -qy autoremove
 
 # install the avahi-daemon to be able to access the RPi as wallboard.local
 echo "Installing Lightdm, Avahi Daemon, VNC and Chromium"
-apt-get -q install avahi-daemon x11vnc chromium vim chkconfig lightdm
+apt-get -qy install avahi-daemon x11vnc chromium vim chkconfig
 
 #chkconfig lightdm off
 chkconfig -a avahi-daemon --level 2345 --deps rc.local 2> /dev/null
@@ -94,5 +94,5 @@ cat /tmp/rc_local.patch >>  /etc/rc.local
 rm /tmp/rc_local.patch
 
 echo "The RPi Wallboard setup is compleated"
-echo "restart the RPi using 'sudo shutdown -r now'
+echo "restart the RPi using 'sudo shutdown -r now'"
 # now
