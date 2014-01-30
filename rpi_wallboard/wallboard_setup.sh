@@ -54,7 +54,7 @@ apt-get -qy update && apt-get -qy upgrade && apt-get -qy autoremove
 
 # install the avahi-daemon to be able to access the RPi as wallboard.local
 echo "Installing Lightdm, Avahi Daemon, VNC and Chromium"
-apt-get -qy install avahi-daemon x11vnc chromium vim chkconfig
+apt-get -qy install avahi-daemon x11vnc chromium vim chkconfig matchbox-window-manager
 
 #chkconfig lightdm off
 chkconfig -a avahi-daemon --level 2345 --deps rc.local 2> /dev/null

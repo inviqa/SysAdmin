@@ -54,7 +54,7 @@ Log into the RPi with the user ‘pi' and the password ‘raspberry’ and run t
 
 #TODO
 * automate installation of config.txt
-* move rc_local.parch to /boot
+* move rc_local.patch to /boot
 * before downloading the files from git make sure that they are not already in the current directory (or in boot)
 
 #License and Author
