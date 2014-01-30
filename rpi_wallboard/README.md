@@ -46,8 +46,13 @@ You can monitor the dumping progress via Activity Monitor (on a Mac), filtering 
 
 Gacefully unmount the SD card, then plug it into the RPi and turn the RPi on with a keyboard, mouse and screen connected (we need the keyboard & mouse just for the first run).
 
-#Network Setup: Wifi
-The WiFi on the RPi is quite bad, but with the right workarounds (implemented in the script) it will do the job, as a backup (or preferred solution) you can make use of a Ethernet connection.
+#VNC connection
+By defaul the RPi Wallboard is accessible via VNC in Multi/Shared ViewOnly mode, with NO PASSWORD at the address 'wallboard.local' or 'vnc://wallboard.local' (for Safari)
+
+#SSH connection
+By defaul the RPi Wallboard is accessible via SSH on the local network using the addressl 'wallboard.local'
+user: pi
+password: raspberry
 
 #Usage
 Log into the RPi with the user ‘pi' and the password ‘raspberry’ and run the /boot/wallboard_setup.sh script 'root' or with sudo.
