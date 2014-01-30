@@ -24,7 +24,7 @@ sed -i "s/^iface wlan0 inet manual.*$/#&/g" /etc/network/interfaces
 sed -i "s/^wpa-roam.*$/#&/g" /etc/network/interfaces
 sed -i "s/^iface default inet dhcp.*$/#&/g" /etc/network/interfaces
 
-if ! cat /etc/network/interfaces | grep wallboard_setup_ok;then
+if cat /etc/network/interfaces | grep "wallboard_setup_ok";then
   echo "wlan0 is already configured"
 else
   echo "Configuring wlan0"
@@ -38,9 +38,8 @@ iface wlan0 inet dhcp
      wpa-psk put_here_the_crypted_ssid_password
 ## remove this wall block if you want wallboard_setup to work properly ##
 EOF
-
-sed -i "s/put_here_the_ssid/$SSID/g" /etc/network/interfaces
-sed -i "s/put_here_the_crypted_ssid_password/$SSID_PWD_CRYPT/g" /etc/network/interfaces
+  sed -i "s/put_here_the_ssid/$SSID/g" /etc/network/interfaces
+  sed -i "s/put_here_the_crypted_ssid_password/$SSID_PWD_CRYPT/g" /etc/network/interfaces
 fi
 
 # try to bring up the wlan0 device
@@ -90,16 +89,21 @@ else
   echo "/boot/xinitrc was already installed"
 fi
 
-echo "Patching /etc/rc.local to load the new xinitrc file" 
-# removed the 'exit 0' to allow to append the rc.local patch (which will reintroduce the 'exit 0')
-sed -i "/^exit 0/d" /etc/rc.local
-# download the patch
-curl -# -o /tmp/rc_local.patch $RC_LOCAL_PATCH_URL
-# apply the patch
-cat /tmp/rc_local.patch >>  /etc/rc.local
-# clean up
-rm /tmp/rc_local.patch
-
+if cat /etc/rc.local | grep "rc.local_is_patched"; then
+  echo "/etc/rc.local is alredy patched"
+else
+  echo "Patching /etc/rc.local to load the new xinitrc file" 
+  # removed the 'exit 0' to allow to append the rc.local patch (which will reintroduce the 'exit 0')
+  sed -i "/^exit 0/d" /etc/rc.local
+  # download the patch
+  curl -# -o /tmp/rc_local.patch $RC_LOCAL_PATCH_URL
+  # apply the patch
+  echo "## rc.local_is_patched ## if this line is present rc.local has already been patched" >> /etc/rc.local
+  cat /tmp/rc_local.patch >>  /etc/rc.local
+  echo "## remove this wall block if you want rc_local.patch to be re-applied#" >> /etc/rc.local
+  # clean up
+  rm /tmp/rc_local.patch
+fi
 echo "The RPi Wallboard setup is compleated"
 echo "restart the RPi using 'sudo shutdown -r now'"
 # now
