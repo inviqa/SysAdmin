@@ -24,17 +24,24 @@ sed -i "s/^iface wlan0 inet manual.*$/#&/g" /etc/network/interfaces
 sed -i "s/^wpa-roam.*$/#&/g" /etc/network/interfaces
 sed -i "s/^iface default inet dhcp.*$/#&/g" /etc/network/interfaces
 
-# append the new settings to /etc/network/interfaces
-cat <<'EOF' >> /etc/network/interfaces
+if ! cat /etc/network/interfaces | grep wallboard_setup_ok;then
+  echo "wlan0 is already configured"
+else
+  echo "Configuring wlan0"
+  # append the new settings to /etc/network/interfaces
+  cat <<'EOF' >> /etc/network/interfaces
+## wallboard_setup_ok ## if this line is present the wallboard_setup script will not work again
 auto wlan0
 allow-hotplug wlan0
 iface wlan0 inet dhcp
      wpa-ssid "put_here_the_ssid"
      wpa-psk put_here_the_crypted_ssid_password
+## remove this wall block if you want wallboard_setup to work properly ##
 EOF
 
 sed -i "s/put_here_the_ssid/$SSID/g" /etc/network/interfaces
 sed -i "s/put_here_the_crypted_ssid_password/$SSID_PWD_CRYPT/g" /etc/network/interfaces
+fi
 
 # try to bring up the wlan0 device
 echo "Activating wlan0"
