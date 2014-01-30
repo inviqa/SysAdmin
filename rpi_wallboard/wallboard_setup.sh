@@ -38,6 +38,11 @@ iface wlan0 inet dhcp
      wpa-psk put_here_the_crypted_ssid_password
 ## remove this wall block if you want wallboard_setup to work properly ##
 EOF
+fi
+
+# test if it's been specified a ne compbination SSID and password
+if [[ ! -z "$SSID" && ! -z "$SSID_PWD_CRYPT"  ]];then
+  echo "Updating the WiFi connection credentials"
   sed -i "s/put_here_the_ssid/$SSID/g" /etc/network/interfaces
   sed -i "s/put_here_the_crypted_ssid_password/$SSID_PWD_CRYPT/g" /etc/network/interfaces
 fi
