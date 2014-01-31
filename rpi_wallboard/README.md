@@ -12,7 +12,15 @@ In this specific case, for Inviqa, the Wallboard is preconfigured to login and s
 - Multi (shared) VNC screen sharing
 - Automatic Shutdown (best accompanied by a mains timer socket to turn it on periodically)
 
-#Setup
+#VNC connection
+By defaul the RPi Wallboard is accessible via VNC in Multi/Shared ViewOnly mode, with NO PASSWORD at the address 'wallboard.local' or 'vnc://wallboard.local' (for Safari)
+
+#SSH connection
+By defaul the RPi Wallboard is accessible via SSH on the local network using the addressl 'wallboard.local'
+user: pi
+password: raspberry
+
+#How-To build a Raspberry Pi Wall board
 This instructions are for Mac OSX but can be easily adapted to be run on a Linux host.
 
 ##Install the latest Raspbian
@@ -46,18 +54,10 @@ You can monitor the dumping progress via Activity Monitor (on a Mac), filtering 
 
 Gacefully unmount the SD card, then plug it into the RPi and turn the RPi on with a keyboard, mouse and screen connected (we need the keyboard & mouse just for the first run).
 
-#VNC connection
-By defaul the RPi Wallboard is accessible via VNC in Multi/Shared ViewOnly mode, with NO PASSWORD at the address 'wallboard.local' or 'vnc://wallboard.local' (for Safari)
 
-#SSH connection
-By defaul the RPi Wallboard is accessible via SSH on the local network using the addressl 'wallboard.local'
-user: pi
-password: raspberry
-
-#Usage
+##First Run: Log into the Jenkins Wallboard
 Log into the RPi with the user ‘pi' and the password ‘raspberry’ and run the /boot/wallboard_setup.sh script 'root' or with sudo.
 
-#First Run: Log into the Jenkins Wallboard
 After running the /wallboard_setup.sh you need to restart the RPi.
 Use a USB mouse and a keyboard connected to the RPI to operate it.
 When restarted, if all went through without issues, it will appear the Federated Login page, at this stage:
@@ -97,12 +97,12 @@ Start the dumping with 'dd'
 # count=2900 defines the number of blocks to copy
 # to avoid corrupting the filesystem it's better to round up the count so 2821MB is rounded to 2900 blocks
 
-sudo dd of=wallboard.img if=/dev/rdisk1 bs=1m count=2900
+sudo dd of=rpi_wallboard.img if=/dev/rdisk1 bs=1m count=2900
 ```
 
 #Restore from a backup image
 ```
-sudo dd if=wallboard.img of=/dev/rdisk1 bs=1m
+sudo dd if=rpi_wallboard.img of=/dev/rdisk1 bs=1m
 ```
 
 #TODO
