@@ -27,14 +27,14 @@ unzip  2014-01-07-wheezy-raspbian.zip
 Insert the SD card in the SD read of your computer.
 ```bash
 # Run ‘diskutil’ from command-line to learn what is the device name of the SD card (which we assume is ‘/dev/disk1’) and it’s partitions.
-diskutil —list
+diskutil list
 
 # Unmount all the possibly mounted partitions of /dev/disk# (mind that the disk won’t be ejected)
 diskutil unmountDisk /dev/disk1
 
 # Dump the raspbian image into the SD card which for which we will use the RAW interface ‘/dev/rdisk1’ so that the dump will be quite fast
 
-sudo dd if=2014-01-07-wheezy-raspbian.img of=/dev/rdisk1 bs=2048k
+sudo dd if=2014-01-07-wheezy-raspbian.img of=/dev/rdisk1 bs=1m
 ```
 
 ```
@@ -56,6 +56,52 @@ password: raspberry
 
 #Usage
 Log into the RPi with the user ‘pi' and the password ‘raspberry’ and run the /boot/wallboard_setup.sh script 'root' or with sudo.
+
+#First Run: Log into the Jenkins Wallboard
+After running the /wallboard_setup.sh you need to restart the RPi.
+Use a USB mouse and a keyboard connected to the RPI to operate it.
+When restarted, if all went through without issues, it will appear the Federated Login page, at this stage:
+1. Press the 'F1' stroke in the keyboard to show a fully framed window of Chromium.
+2. Click on the menu button (top right of the screen)
+3. Click the 'Sign in to Chromium...' option
+4. Enter the 'robot' user credentials (DON'T USE YOUR PERSONAL CREDENTIALS)
+5. 
+
+#Backup: Create an restorable image
+##Deduce the total size of backupimage
+1. mount the the SD card on the computer (in our case a Mac)
+2. get the size of the boot partiotn in bytes
+```
+# get Gthe size of the boot partiotn in bytes
+diskutil info /dev/disk2s1|grep "Total Size"|cut -f2 -d'(' |cut -f1 -d")"
+# i.e. 58720256 Bytes
+
+# get Gthe size of the root partiotn in bytes
+diskutil info /dev/disk2s2|grep "Total Size"|cut -f2 -d'(' |cut -f1 -d")"
+# i.e. 2899312640 Bytes
+```
+3. Sum these two value and divide it by 1048576 (1024 * 1024) to know how many MB of space they are using:
+   **58720256 + 2899312640 = 2958032896 Bytes / 1024 / 1024 = 2821 MB**
+
+##Create the backup image
+1. Unmount the all the SD partition without ejecting the device
+```bash
+diskutil unmountDisk /dev/disk1
+```
+5. Start the dumping with 'dd'
+```bash
+# bs=1m define the blocksize of 1MB
+# count=2900 defines the number of blocks to copy
+# to avoid corrupting the filesystem it's better to round up the count so 2821MB is rounded to 2900 blocks
+
+
+sudo dd of=wallboard.img if=/dev/rdisk1 bs=1m count=2900
+```
+
+#Restore from a backup image
+```bash
+sudo dd if=wallboard.img of=/dev/rdisk1 bs=1m
+```
 
 #TODO
 * automate installation of config.txt
