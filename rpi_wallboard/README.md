@@ -74,11 +74,11 @@ Mount the the SD card on the computer (in our case a Mac)
 Get the size of the boot partiotn in bytes
 ```
 # get Gthe size of the boot partiotn in bytes
-diskutil info /dev/disk2s1|grep "Total Size"|cut -f2 -d'(' |cut -f1 -d")"
+diskutil info /dev/disk1s1|grep "Total Size"|cut -f2 -d'(' |cut -f1 -d")"
 # i.e. 58720256 Bytes
 
 # get Gthe size of the root partiotn in bytes
-diskutil info /dev/disk2s2|grep "Total Size"|cut -f2 -d'(' |cut -f1 -d")"
+diskutil info /dev/disk1s2|grep "Total Size"|cut -f2 -d'(' |cut -f1 -d")"
 # i.e. 2899312640 Bytes
 ```
 Sum these two value and divide it by 1048576 (1024 * 1024) to know how many MB of space they are using:
