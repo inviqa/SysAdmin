@@ -2,7 +2,7 @@
 # run this script as 'root' or with 'sudo'
 SSID=$1
 SSID_PWD=$2
-SSID_PWD_CRYPT=`wpa_passphrase test password | grep psk | sed "/#/d" | cut -d'=' -f2`
+SSID_PWD_CRYPT=`wpa_passphrase ssid password | grep psk | sed "/#/d" | cut -d'=' -f2`
 RPI_HOSTNAME=wallboard
 WIFI_CHECK_URL="https://raw.github.com/marcomc/rpi_wifi_check/master/WiFi_Check"
 RC_LOCAL_PATCH_URL="https://raw.github.com/inviqa/SysAdmin/master/rpi_wallboard/rc_local.patch"
