@@ -69,8 +69,9 @@ When restarted, if all went through without issues, it will appear the Federated
 
 #Backup: Create an restorable image
 ##Deduce the total size of backupimage
-1. mount the the SD card on the computer (in our case a Mac)
-2. get the size of the boot partiotn in bytes
+Mount the the SD card on the computer (in our case a Mac)
+
+Get the size of the boot partiotn in bytes
 ```
 # get Gthe size of the boot partiotn in bytes
 diskutil info /dev/disk2s1|grep "Total Size"|cut -f2 -d'(' |cut -f1 -d")"
@@ -80,20 +81,21 @@ diskutil info /dev/disk2s1|grep "Total Size"|cut -f2 -d'(' |cut -f1 -d")"
 diskutil info /dev/disk2s2|grep "Total Size"|cut -f2 -d'(' |cut -f1 -d")"
 # i.e. 2899312640 Bytes
 ```
-3. Sum these two value and divide it by 1048576 (1024 * 1024) to know how many MB of space they are using:
-   **58720256 + 2899312640 = 2958032896 Bytes / 1024 / 1024 = 2821 MB**
+Sum these two value and divide it by 1048576 (1024 * 1024) to know how many MB of space they are using:
+```
+**58720256 + 2899312640 = 2958032896 Bytes / 1024 / 1024 = 2821 MB**
+```
 
 ##Create the backup image
-1. Unmount the all the SD partition without ejecting the device
+Unmount the all the SD partition without ejecting the device
 ```bash
 diskutil unmountDisk /dev/disk1
 ```
-5. Start the dumping with 'dd'
+Start the dumping with 'dd'
 ```bash
 # bs=1m define the blocksize of 1MB
 # count=2900 defines the number of blocks to copy
 # to avoid corrupting the filesystem it's better to round up the count so 2821MB is rounded to 2900 blocks
-
 
 sudo dd of=wallboard.img if=/dev/rdisk1 bs=1m count=2900
 ```
