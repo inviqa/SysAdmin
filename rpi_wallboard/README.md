@@ -67,7 +67,7 @@ When restarted, if all went through without issues, it will appear the Federated
 4. Enter the 'robot' user credentials (DON'T USE YOUR PERSONAL CREDENTIALS)
 5. 
 
-#Backup: Create an restorable image
+#Backup: Create a restorable image
 ##Deduce the total size of backupimage
 Mount the the SD card on the computer (in our case a Mac)
 
