@@ -88,11 +88,11 @@ Sum these two value and divide it by 1048576 (1024 * 1024) to know how many MB o
 
 ##Create the backup image
 Unmount the all the SD partition without ejecting the device
-```bash
+```
 diskutil unmountDisk /dev/disk1
 ```
 Start the dumping with 'dd'
-```bash
+```
 # bs=1m define the blocksize of 1MB
 # count=2900 defines the number of blocks to copy
 # to avoid corrupting the filesystem it's better to round up the count so 2821MB is rounded to 2900 blocks
@@ -101,7 +101,7 @@ sudo dd of=wallboard.img if=/dev/rdisk1 bs=1m count=2900
 ```
 
 #Restore from a backup image
-```bash
+```
 sudo dd if=wallboard.img of=/dev/rdisk1 bs=1m
 ```
 
