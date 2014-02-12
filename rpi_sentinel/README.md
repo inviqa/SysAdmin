@@ -1,5 +1,5 @@
 #Description
-rpi_iciga is a collection of script and instructions intended to build an Icinga server on a RaspberryPi micro computer.
+rpi_sentinel is a collection of script and instructions intended to build an Icinga server on a RaspberryPi micro computer.
 
 Potentially it could be run as a wallboard running a full-screen browser in kiosk-mode that will automatically load a webpage showing the desired content via NagVis, without any user interatction after turning on the RPi.
 #Features
@@ -19,7 +19,7 @@ By defaul the RPi is accessible via SSH on the local network using the address '
 user: pi
 password: raspberry (which must be personalised)
 
-#How-To build a Raspberry Pi Wall board
+#How-To build a Raspberry Pi Sentinel
 This instructions are for Mac OSX but can be easily adapted to be run on a Linux host.
 
 ##Install the latest Raspbian

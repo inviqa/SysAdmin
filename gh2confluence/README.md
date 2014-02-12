@@ -13,6 +13,9 @@ The best use of the script is to execute it periodically via a 'cron' script
 When executed the script do not need any command-line parameter as it sources them from the .netrc and the .ghinfo
 
 #TODO
+- make the script to source the RSA Key from LDAP and no more from GH so that we can publish the RSA keys of the users wich do not user GH
+- provide the option to choose if publishing from GH or from LDAP
+- rename the script to ldap2confluence
 - Add the possibility to define command-line parameters to override/ignore the information in the .ghinfo file
 - Add the possibility to define command-line parameters to override/ignore the information in the .netrc file
 - Add the '-v' (--version) parameter
