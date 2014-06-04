@@ -23,7 +23,7 @@ function _install_nagios_rpms() {
   curl -o "${REMI_RPM}" "${REMI_RELEASE}"
 
   sudo rpm -Uvh "${EPEL_RPM}" "${REMI_RPM}"
-  rm -rf ${DOWNLOAD_DIR}
+  rm -rf ${DOWNLOAD_DIR}  && cd ~
 }
 
 function _command_exists() {
