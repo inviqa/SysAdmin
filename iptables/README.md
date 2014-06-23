@@ -3,7 +3,7 @@ This file is used to setup restrictions on SSH via IPTables on hosts. It appends
 Usage:
 
 ```
-curl https://raw.githubusercontent.com/inviqa/SysAdmin/feature/iptables-ssh/iptables/ssh.sh | sudo bash
+curl https://raw.githubusercontent.com/inviqa/SysAdmin/master/iptables/ssh.sh | sudo bash
 ```
 Wiill create the rules.
 
