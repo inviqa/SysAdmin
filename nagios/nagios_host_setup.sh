@@ -3,11 +3,13 @@
 SUDO=''
 
 if [[ ${EUID} -ne 0 ]]; then
+   # Not running as root, use sudo
    SUDO='sudo';
 fi
 
 function _install_nagios_rpms() {
   local EPEL_VERSION=${1:-'6'}
+  # make a temporary directory
   local DOWNLOAD_DIR=$(mktemp -d)
   cd ${DOWNLOAD_DIR}
 
@@ -77,6 +79,10 @@ function setup_nagios() {
   # Installation of the System Memory check script
 
   ${SUDO} mkdir -p "${NAGIOS_BIN_DIR}"
+
+  cd "${NAGIOS_BIN_DIR}"
+
+  rm ./*
 
   ${SUDO} curl -k -o "${NAGIOS_BIN_DIR}/check_mem.pl" "${THIRD_PARTY_UNPACKAGED_SCRIPTS_URL}/check_mem.pl"
 
