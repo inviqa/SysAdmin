@@ -28,6 +28,7 @@ function _install_nagios_rpms() {
   curl -o "${EPEL_RPM}" "${EPEL_RELEASE}"
   curl -o "${REMI_RPM}" "${REMI_RELEASE}"
 
+  echo "Installing ${EPEL_RPM} ${EPEL_RELEASE}"
   ${SUDO} rpm -Uvh "${EPEL_RPM}" "${REMI_RPM}"
   rm -rf ${DOWNLOAD_DIR}  && cd ~
 }
@@ -51,6 +52,7 @@ function setup_nagios() {
     echo "User ${NAGIOS_USER} not fouond, creating..."
     ${SUDO} adduser "${NAGIOS_USER}" --home "${NAGIOS_USER_HOME}"
   fi
+  echo "Locking password for nagios user"
   ${SUDO} passwd -l "${NAGIOS_USER}"
 
   # install the SSH2 RSA Public key of the nagios user of the nagios/icinga server
@@ -69,9 +71,11 @@ function setup_nagios() {
   _install_nagios_rpms ${REDHAT_VERSION_NUMBER}
 
   # Installation of nagios checks scripts and necassary libraries
+  echo 'Install nagios RPMs'
   ${SUDO} yum install -y nagios-plugins nagios-common nagios-plugins-http nagios-plugins-load nagios-plugins-disk nagios-plugins-swap
 
   # Installation of the System Memory check script
+
   ${SUDO} mkdir -p "${NAGIOS_BIN_DIR}"
 
   ${SUDO} curl -k -o "${NAGIOS_BIN_DIR}/check_mem.pl" "${THIRD_PARTY_UNPACKAGED_SCRIPTS_URL}/check_mem.pl"
