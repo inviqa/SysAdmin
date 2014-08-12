@@ -44,27 +44,11 @@ function setup_nagios() {
   local NAGIOS_USER='nagios'
   local NAGIOS_USER_HOME="/home/${NAGIOS_USER}"
   local NAGIOS_BIN_DIR="${NAGIOS_USER_HOME}/bin"
-  #local RSA_PUB_KEY_URL=${1:-'https://raw.githubusercontent.com/inviqa/SysAdmin/master/nagios/inviqa_nagios_user_rsa_public_key.pub'}
+
   local THIRD_PARTY_UNPACKAGED_SCRIPTS_URL=${2:-'https://raw.github.com/inviqa/SysAdmin/master/nagios/third-party'}
   local NAGIOS_SCRIPTS_SYSTEM_DIR='/usr/lib64/nagios/plugins'
 
-  #if ! id -u "${NAGIOS_USER}" >/dev/null 2>&1;
-  #then
-    # creation of a nagios user on each server
-  #  echo "User ${NAGIOS_USER} not fouond, creating..."
-  #  ${SUDO} adduser "${NAGIOS_USER}" --home "${NAGIOS_USER_HOME}"
-  #fi
-
-  #${SUDO} passwd -l "${NAGIOS_USER}"
-
-  # install the SSH2 RSA Public key of the nagios user of the nagios/icinga server
-  #${SUDO} mkdir -p "${NAGIOS_USER_HOME}/.ssh"
-
-  #echo 'Copying down authorized key'
-  #${SUDO} curl -L -o "${NAGIOS_USER_HOME}/.ssh/authorized_keys" "${RSA_PUB_KEY_URL}"
-  #${SUDO} chown -R "${NAGIOS_USER}":"${NAGIOS_USER}" "${NAGIOS_USER_HOME}/.ssh"
-  #${SUDO} chmod -R go-rwx "${NAGIOS_USER_HOME}/.ssh"
-
+>>>>>>> Made sure that directory belongs to nagios
   if ! _command_exists 'lsb_release';
   then
     echo 'lsb_release command not found, installing...'
@@ -94,7 +78,7 @@ function setup_nagios() {
   ln -f -s "${NAGIOS_SCRIPTS_SYSTEM_DIR}/check_swap" "${NAGIOS_BIN_DIR}/check_swap"
   ln -f -s "${NAGIOS_SCRIPTS_SYSTEM_DIR}/check_http" "${NAGIOS_BIN_DIR}/check_http"
 
-  ${SUDO} chown -R "${NAGIOS_USER}":"${NAGIOS_USER}" "${NAGIOS_BIN_DIR}"
+  ${SUDO} chown -R "${NAGIOS_USER}":"${NAGIOS_USER}"
 }
 
 setup_nagios
