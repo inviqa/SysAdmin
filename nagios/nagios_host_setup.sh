@@ -45,7 +45,7 @@ function setup_nagios() {
   local NAGIOS_USER_HOME="/home/${NAGIOS_USER}"
   local NAGIOS_BIN_DIR="${NAGIOS_USER_HOME}/bin"
 
-  local THIRD_PARTY_UNPACKAGED_SCRIPTS_URL=${2:-'https://raw.github.com/inviqa/SysAdmin/master/nagios/third-party'}
+  local THIRD_PARTY_UNPACKAGED_SCRIPTS_URL=${2:-'https://raw.githubusercontent.com/inviqa/SysAdmin/master/nagios/third-party'}
   local NAGIOS_SCRIPTS_SYSTEM_DIR='/usr/lib64/nagios/plugins'
 
   if ! _command_exists 'lsb_release';
@@ -63,14 +63,13 @@ function setup_nagios() {
 
   # Installation of the System Memory check script
 
+
   ${SUDO} mkdir -p "${NAGIOS_BIN_DIR}"
 
   cd "${NAGIOS_BIN_DIR}"
 
-  rm ./*
-
-  ${SUDO} curl -k -o "${NAGIOS_BIN_DIR}/check_mem.pl" "${THIRD_PARTY_UNPACKAGED_SCRIPTS_URL}/check_mem.pl"
-
+  ${SUDO} curl -k -L -o "${NAGIOS_BIN_DIR}/check_mem.pl" "${THIRD_PARTY_UNPACKAGED_SCRIPTS_URL}/check_mem.pl"
+  chmod +x "${NAGIOS_BIN_DIR}/check_mem.pl"
   # linking the installed check scripts to the nagios's home/bin folder as expected by the nagios server
   ln -f -s "${NAGIOS_SCRIPTS_SYSTEM_DIR}/check_disk" "${NAGIOS_BIN_DIR}/check_disk"
   ln -f -s "${NAGIOS_SCRIPTS_SYSTEM_DIR}/check_load" "${NAGIOS_BIN_DIR}/check_load"
