@@ -27,8 +27,8 @@ function _install_nagios_rpms() {
     EPEL_RELEASE='http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm'
     REMI_RELEASE='http://rpms.famillecollet.com/enterprise/remi-release-6.rpm'
   fi
-  curl -o -L "${EPEL_RPM}" "${EPEL_RELEASE}"
-  curl -o -L "${REMI_RPM}" "${REMI_RELEASE}"
+  curl -L -o "${EPEL_RPM}" "${EPEL_RELEASE}"
+  curl -L -o "${REMI_RPM}" "${REMI_RELEASE}"
 
   echo "Installing ${EPEL_RPM} ${EPEL_RELEASE}"
   ${SUDO} rpm -Uvh "${EPEL_RPM}" "${REMI_RPM}"
@@ -59,7 +59,7 @@ function setup_nagios() {
 
   # install the SSH2 RSA Public key of the nagios user of the nagios/icinga server
   ${SUDO} mkdir -p "${NAGIOS_USER_HOME}/.ssh"
-  ${SUDO} curl -o -L "${NAGIOS_USER_HOME}/.ssh/authorized_keys" "${RSA_PUB_KEY_URL}"
+  ${SUDO} curl -L -o "${NAGIOS_USER_HOME}/.ssh/authorized_keys" "${RSA_PUB_KEY_URL}"
   ${SUDO} chown -R "${NAGIOS_USER}":"${NAGIOS_USER}" "${NAGIOS_USER_HOME}/.ssh"
   ${SUDO} chmod -R go-rwx "${NAGIOS_USER_HOME}/.ssh"
 
