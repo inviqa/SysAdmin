@@ -7,7 +7,7 @@ if [[ ${EUID} -ne 0 ]]; then
 fi
 
 function _install_nagios_rpms() {
-  local EPEL_VERSION=${1:-'5'}
+  local EPEL_VERSION=${1:-'6'}
   local DOWNLOAD_DIR=$(mktemp -d)
   cd ${DOWNLOAD_DIR}
 
@@ -49,7 +49,7 @@ function setup_nagios() {
   then
     # creation of a nagios user on each server
     echo "User ${NAGIOS_USER} not fouond, creating..."
-    sudo adduser "${NAGIOS_USER}" --home "${NAGIOS_USER_HOME}"
+    ${SUDO} adduser "${NAGIOS_USER}" --home "${NAGIOS_USER_HOME}"
   fi
   ${SUDO} passwd -l "${NAGIOS_USER}"
 
