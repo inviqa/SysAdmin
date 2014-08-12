@@ -63,7 +63,7 @@ function setup_nagios() {
 
   # Installation of the System Memory check script
 
-
+  ${SUDO} rm -rf "${NAGIOS_BIN_DIR}"
   ${SUDO} mkdir -p "${NAGIOS_BIN_DIR}"
 
   cd "${NAGIOS_BIN_DIR}"
