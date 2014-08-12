@@ -77,7 +77,7 @@ function setup_nagios() {
   ln -f -s "${NAGIOS_SCRIPTS_SYSTEM_DIR}/check_swap" "${NAGIOS_BIN_DIR}/check_swap"
   ln -f -s "${NAGIOS_SCRIPTS_SYSTEM_DIR}/check_http" "${NAGIOS_BIN_DIR}/check_http"
 
-  ${SUDO} chown -R "${NAGIOS_USER}":"${NAGIOS_USER}"
+  ${SUDO} chown -R "${NAGIOS_USER}":"${NAGIOS_USER}" "${NAGIOS_USER_HOME}"
 }
 
 setup_nagios
