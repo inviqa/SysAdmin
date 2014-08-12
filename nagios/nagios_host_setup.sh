@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+SUDO=''
+
+if [[ ${EUID} -ne 0 ]]; then
+   SUDO='sudo';
+fi
+
 function _install_nagios_rpms() {
   local EPEL_VERSION=${1:-'5'}
   local DOWNLOAD_DIR=$(mktemp -d)
@@ -22,7 +28,7 @@ function _install_nagios_rpms() {
   curl -o "${EPEL_RPM}" "${EPEL_RELEASE}"
   curl -o "${REMI_RPM}" "${REMI_RELEASE}"
 
-  sudo rpm -Uvh "${EPEL_RPM}" "${REMI_RPM}"
+  ${SUDO} rpm -Uvh "${EPEL_RPM}" "${REMI_RPM}"
   rm -rf ${DOWNLOAD_DIR}  && cd ~
 }
 
@@ -45,30 +51,30 @@ function setup_nagios() {
     echo "User ${NAGIOS_USER} not fouond, creating..."
     sudo adduser "${NAGIOS_USER}" --home "${NAGIOS_USER_HOME}"
   fi
-  sudo passwd -l "${NAGIOS_USER}"
+  ${SUDO} passwd -l "${NAGIOS_USER}"
 
   # install the SSH2 RSA Public key of the nagios user of the nagios/icinga server
-  sudo mkdir -p "${NAGIOS_USER_HOME}/.ssh"
-  sudo curl -o "${NAGIOS_USER_HOME}/.ssh/authorized_keys" "${RSA_PUB_KEY_URL}"
-  sudo chown -R "${NAGIOS_USER}":"${NAGIOS_USER}" "${NAGIOS_USER_HOME}/.ssh"
-  sudo chmod -R go-rwx "${NAGIOS_USER_HOME}/.ssh"
+  ${SUDO} mkdir -p "${NAGIOS_USER_HOME}/.ssh"
+  ${SUDO} curl -o "${NAGIOS_USER_HOME}/.ssh/authorized_keys" "${RSA_PUB_KEY_URL}"
+  ${SUDO} chown -R "${NAGIOS_USER}":"${NAGIOS_USER}" "${NAGIOS_USER_HOME}/.ssh"
+  ${SUDO} chmod -R go-rwx "${NAGIOS_USER_HOME}/.ssh"
 
   if ! _command_exists 'lsb_release';
   then
     echo 'lsb_release command not found, installing...'
-    sudo yum install -y redhat-lsb
+    ${SUDO} yum install -y redhat-lsb
   fi
   local REDHAT_VERSION_NUMBER=$(lsb_release -rs | cut -f1 -d.)
 
   _install_nagios_rpms ${REDHAT_VERSION_NUMBER}
 
   # Installation of nagios checks scripts and necassary libraries
-  sudo yum install -y nagios-plugins nagios-common nagios-plugins-http nagios-plugins-load nagios-plugins-disk nagios-plugins-swap
+  ${SUDO} yum install -y nagios-plugins nagios-common nagios-plugins-http nagios-plugins-load nagios-plugins-disk nagios-plugins-swap
 
   # Installation of the System Memory check script
-  sudo mkdir -p "${NAGIOS_BIN_DIR}"
+  ${SUDO} mkdir -p "${NAGIOS_BIN_DIR}"
 
-  sudo curl -k -o "${NAGIOS_BIN_DIR}/check_mem.pl" "${THIRD_PARTY_UNPACKAGED_SCRIPTS_URL}/check_mem.pl"
+  ${SUDO} curl -k -o "${NAGIOS_BIN_DIR}/check_mem.pl" "${THIRD_PARTY_UNPACKAGED_SCRIPTS_URL}/check_mem.pl"
 
   # linking the installed check scripts to the nagios's home/bin folder as expected by the nagios server
   ln -f -s "${NAGIOS_SCRIPTS_SYSTEM_DIR}/check_disk" "${NAGIOS_BIN_DIR}/check_disk"
@@ -76,7 +82,7 @@ function setup_nagios() {
   ln -f -s "${NAGIOS_SCRIPTS_SYSTEM_DIR}/check_swap" "${NAGIOS_BIN_DIR}/check_swap"
   ln -f -s "${NAGIOS_SCRIPTS_SYSTEM_DIR}/check_http" "${NAGIOS_BIN_DIR}/check_http"
 
-  sudo chown -R "${NAGIOS_USER}":"${NAGIOS_USER}" "${NAGIOS_BIN_DIR}"
+  ${SUDO} chown -R "${NAGIOS_USER}":"${NAGIOS_USER}" "${NAGIOS_BIN_DIR}"
 }
 
 setup_nagios
