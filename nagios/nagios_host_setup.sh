@@ -44,7 +44,7 @@ function setup_nagios() {
   local NAGIOS_USER='nagios'
   local NAGIOS_USER_HOME="/home/${NAGIOS_USER}"
   local NAGIOS_BIN_DIR="${NAGIOS_USER_HOME}/bin"
-  local RSA_PUB_KEY_URL=${1:-'https://raw.github.com/inviqa/SysAdmin/master/nagios/inviqa_nagios_user_rsa_public_key.pub'}
+  local RSA_PUB_KEY_URL=${1:-'https://raw.githubusercontent.com/inviqa/SysAdmin/master/nagios/inviqa_nagios_user_rsa_public_key.pub'}
   local THIRD_PARTY_UNPACKAGED_SCRIPTS_URL=${2:-'https://raw.github.com/inviqa/SysAdmin/master/nagios/third-party'}
   local NAGIOS_SCRIPTS_SYSTEM_DIR='/usr/lib64/nagios/plugins'
 
@@ -54,7 +54,7 @@ function setup_nagios() {
     echo "User ${NAGIOS_USER} not fouond, creating..."
     ${SUDO} adduser "${NAGIOS_USER}" --home "${NAGIOS_USER_HOME}"
   fi
-  echo "Locking password for nagios user"
+
   ${SUDO} passwd -l "${NAGIOS_USER}"
 
   # install the SSH2 RSA Public key of the nagios user of the nagios/icinga server
