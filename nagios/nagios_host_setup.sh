@@ -48,7 +48,6 @@ function setup_nagios() {
   local THIRD_PARTY_UNPACKAGED_SCRIPTS_URL=${2:-'https://raw.github.com/inviqa/SysAdmin/master/nagios/third-party'}
   local NAGIOS_SCRIPTS_SYSTEM_DIR='/usr/lib64/nagios/plugins'
 
->>>>>>> Made sure that directory belongs to nagios
   if ! _command_exists 'lsb_release';
   then
     echo 'lsb_release command not found, installing...'
