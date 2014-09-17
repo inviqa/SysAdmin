@@ -1,9 +1,13 @@
 #!/bin/bash
 # run this script as 'root' or with 'sudo'
-SSID=$1
-SSID_PWD=$2
-SSID_PWD_CRYPT=`wpa_passphrase ssid password | grep psk | sed "/#/d" | cut -d'=' -f2`
-RPI_HOSTNAME=wallboard
+
+# requires the paramaeter ssid= to be set in config.txt
+SSID=`cat config.txt |grep ssid= | sed "/#/d" | cut -d = -f2`
+# requires the paramaeter ssid_password= (clear password) to be set in config.txt
+SSID_PWD=`cat config.txt |grep ssid_password= | sed "/#/d" | cut -d = -f2`
+# comverts the clear password in a cripted password
+SSID_PWD_CRYPT=`wpa_passphrase $SSID $SSID_PWD | grep psk | sed "/#/d" | cut -d'=' -f2`
+NEW_RPI_HOSTNAME=`cat config.txt |grep hostname= | sed "/#/d" | cut -d = -f2`
 WIFI_CHECK_URL="https://raw.github.com/marcomc/rpi_wifi_check/master/WiFi_Check"
 RC_LOCAL_PATCH_URL="https://raw.github.com/inviqa/SysAdmin/master/rpi_wallboard/rc_local.patch"
 XINITRC_URL="https://raw.github.com/inviqa/SysAdmin/master/rpi_wallboard/xinitrc"
@@ -12,8 +16,10 @@ WIFI_CHECK_CRONJOB="/etc/cron.d/WiFi_Check"
 SCHEDULED_SHUTDOWN_CRONJOB="/etc/cron.d/ScheduledShutdown"
 
 # setup the RPi’s hostname
-echo "Changing the hostname to $RPI_HOSTNAME"
-echo $RPI_HOSTNAME > /etc/hostname
+if [ "$HOSTNAME" != "$NEW_RPI_HOSTNAME" ]; then
+	echo "Changing the hostname to $RPI_HOSTNAME"
+	echo $NEW_RPI_HOSTNAME > /etc/hostname
+fi
 
 # set up the WiFi card settings
 
@@ -36,7 +42,7 @@ allow-hotplug wlan0
 iface wlan0 inet dhcp
      wpa-ssid "put_here_the_ssid"
      wpa-psk put_here_the_crypted_ssid_password
-## remove this wall block if you want wallboard_setup to work properly ##
+## remove this wall block if 	you want wallboard_setup to work properly ##
 EOF
 fi
 
@@ -45,6 +51,10 @@ if [[ ! -z "$SSID" && ! -z "$SSID_PWD_CRYPT"  ]];then
   echo "Updating the WiFi connection credentials"
   sed -i "s/put_here_the_ssid/$SSID/g" /etc/network/interfaces
   sed -i "s/put_here_the_crypted_ssid_password/$SSID_PWD_CRYPT/g" /etc/network/interfaces
+  
+  #for security reasons the clear copy of the password and ssid are removed from the config.txt after been used in the network interface configuration file
+  sed -i "s/^ssid=.*$/ssid_=/g" /etc/network/interfaces
+  sed -i "s/^ssid_password=.*$/ssid_password=/g" /etc/network/interfaces
 fi
 
 # try to bring up the wlan0 device
