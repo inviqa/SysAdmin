@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 # run this script as 'root' or with 'sudo'
 
+RC_LOCAL_PATCH_PATH='/boot/rc_local.patch'
 RC_LOCAL_PATCH_URL='https://raw.github.com/inviqa/SysAdmin/master/rpi_wallboard/rc_local.patch'
+
 XINITRC_URL='https://raw.github.com/inviqa/SysAdmin/master/rpi_wallboard/xinitrc'
+
+#if you want don't want to use the onlince copy of WiFi_Check
+WIFI_CHECK_SCRIPT="/boot/WiFi_Check"
 WIFI_CHECK_PATH='/usr/local/bin/WiFi_Check'
-WIFI_CHECK_CRONJOB='/etc/cron.d/WiFi_Check'
-SCHEDULED_SHUTDOWN_CRONJOB='/etc/cron.d/ScheduledShutdown'
 WIFI_CHECK_URL='https://raw.github.com/marcomc/rpi_wifi_check/master/WiFi_Check'
+WIFI_CHECK_CRONJOB='/etc/cron.d/WiFi_Check'
+
+SCHEDULED_SHUTDOWN_CRONJOB='/etc/cron.d/ScheduledShutdown'
 
 function _update_hostname(){
 	#retieves the new hostname from the config.txt file
@@ -17,6 +23,33 @@ function _update_hostname(){
 	fi
 }
 
+function _update_interfaces(){
+	# set up the WiFi card settings
+
+	echo "Configuring wlan0 on /etc/network/interfaces"
+	# comment the lines we want to override
+	sed -i "s/^allow-hotplug wlan0.*$/#&/g" /etc/network/interfaces
+	sed -i "s/^iface wlan0 inet manual.*$/#&/g" /etc/network/interfaces
+	sed -i "s/^wpa-roam.*$/#&/g" /etc/network/interfaces
+	sed -i "s/^iface default inet dhcp.*$/#&/g" /etc/network/interfaces
+
+	if cat /etc/network/interfaces | grep "wallboard_setup_ok";then
+	  echo "wlan0 is already configured"
+	else
+	  echo "Configuring wlan0"
+	  # append the new settings to /etc/network/interfaces
+	  cat <<'EOF' >> /etc/network/interfaces
+## wallboard_setup_ok ## if this line is present the wallboard_setup script will not work again
+auto wlan0
+allow-hotplug wlan0
+iface wlan0 inet dhcp
+     wpa-ssid "put_here_the_ssid"
+     wpa-psk put_here_the_crypted_ssid_password
+## remove this wall block if 	you want wallboard_setup to work properly ##
+EOF
+	fi
+
+}
 function _update_wifi_credentials() {
 	# requires the paramaeter ssid= to be set in config.txt
 	SSID=`cat config.txt |grep ssid= | sed "/#/d" | cut -d = -f2`
@@ -48,41 +81,18 @@ function _activate_wifi(){
 	ifdown wlan0 && sleep 5 && ifup wlan0
 }
 
-function _setup_wifi() {
-	# set up the WiFi card settings
-
-	echo "Configuring wlan0 on /etc/network/interfaces"
-	# comment the lines we want to override
-	sed -i "s/^allow-hotplug wlan0.*$/#&/g" /etc/network/interfaces
-	sed -i "s/^iface wlan0 inet manual.*$/#&/g" /etc/network/interfaces
-	sed -i "s/^wpa-roam.*$/#&/g" /etc/network/interfaces
-	sed -i "s/^iface default inet dhcp.*$/#&/g" /etc/network/interfaces
-
-	if cat /etc/network/interfaces | grep "wallboard_setup_ok";then
-	  echo "wlan0 is already configured"
-	else
-	  echo "Configuring wlan0"
-	  # append the new settings to /etc/network/interfaces
-	  cat <<'EOF' >> /etc/network/interfaces
-## wallboard_setup_ok ## if this line is present the wallboard_setup script will not work again
-auto wlan0
-allow-hotplug wlan0
-iface wlan0 inet dhcp
-     wpa-ssid "put_here_the_ssid"
-     wpa-psk put_here_the_crypted_ssid_password
-## remove this wall block if 	you want wallboard_setup to work properly ##
-EOF
-	fi
-
-	_update_wifi_credentials
-	_activate_wifi
-
+function _install_wifi_check(){
+	
 	# the WiFi on the RPi is quite bad, but with the right workarounds it will do the job,
 	# as a backup (or preferred solution) you can make use of a Ethernet connection.
-	echo "Installing WiFi_Check"
-	curl -# -o $WIFI_CHECK_PATH $WIFI_CHECK_URL
+	if [ -f $WIFI_CHECK_SCRIPT ];then
+		echo "Using the WiFi_Check script located in /boot"
+		cp $WIFI_CHECK_SCRIPT $WIFI_CHECK_PATH
+	else
+		echo "Installing WiFi_Check"
+		curl -# -o $WIFI_CHECK_PATH $WIFI_CHECK_URL
+	fi
 	chmod 755 $WIFI_CHECK_PATH
-
 	echo "Setup a CRON job for WiFi_Check"
 	cat <<'EOF' > $WIFI_CHECK_CRONJOB
 # Run Every 3 mins - Seems like ever min is over kill unless
@@ -93,64 +103,93 @@ EOF
 
 }
 
-function _configure_system() {
-	
+function _setup_wifi() {
+	_update_interfaces
+	_update_wifi_credentials
+	_activate_wifi
+	_install_wifi_check
+}
+
+function _update_packages(){
+	echo "Updating the system"
+	apt-get -qy update && apt-get -qy upgrade	
 	echo "Removing lightdm-gtk-greater"
 	apt-get -qy remove lightdm-gtk-greeter
-
-	echo "Updating the system"
-	apt-get -qy update && apt-get -qy upgrade && apt-get -qy autoremove
-
 	# install the avahi-daemon to be able to access the RPi as wallboard.local
 	echo "Installing Lightdm, Avahi Daemon, VNC and Chromium"
 	apt-get -qy install avahi-daemon x11vnc chromium vim chkconfig matchbox-window-manager ntpdate
+	echo "Cleaning up with auto-remove"
+	apt-get -qy autoremove
+}
 
+function _sinc_clock(){
 	# makes sure that the time is correct
+	echo "Setting the time with ntp"
 	service ntp stop
 	ntpdate-debian
 	service ntp start
+}
 
+function _setup_avahi(){
+	echo "Configuring ZerConf serverice with avahi-daemon"
 	#chkconfig lightdm off
 	chkconfig -a avahi-daemon --level 2345 --deps rc.local 2> /dev/null
 	#makes sure that avahi-daemon is started when the internet connection is up and running (after the rc.local script is run)
 	mv /etc/rc2.d/S03avahi-daemon /etc/rc2.d/S06avahi-daemon
 
-	echo "VNC is accessible at $HOSTNAME.local in ViewOnly mode with NO password"
+	echo "VNC will accessible accessible at $HOSTNAME.local in ViewOnly mode with NO password"
+}
 
+function _setup_scheduled_shutdown(){
 	echo "Setup a CRON job for Scheduled Shutdown at 8pm"
 	cat <<'EOF' > $SCHEDULED_SHUTDOWN_CRONJOB
 # Shuts the system down everyday at 8pm
 00 20 * * *	root	/sbin/shutdown -h now 2>&1 >> /var/log/syslog
 EOF
+}
 
+function _get_xinitrc(){
 	if [ ! -f /boot/xinitrc ];then
 	  echo "Installing /boot/xinitrc"
 	  curl -# -o /boot/xinitrc $XINITRC_URL
 	else
 	  echo "/boot/xinitrc was already installed"
 	fi
+}
 
+function _get_rc_local_patch(){
+	if [ -f $RC_LOCAL_PATCH_PATH  ];then
+		echo "$RC_LOCAL_PATCH_PATH already existing"
+	else
+		echo "Downloading $RC_LOCAL_PATCH_URL"
+	  	# download the patch
+	  	curl -# -o $RC_LOCAL_PATCH_PATH $RC_LOCAL_PATCH_URL
+	fi
+}
+function _patch_rc_local(){
 	if cat /etc/rc.local | grep "rc.local_is_patched"; then
 	  echo "/etc/rc.local is alredy patched"
 	else
 	  echo "Patching /etc/rc.local to load the new xinitrc file" 
 	  # removed the 'exit 0' to allow to append the rc.local patch (which will reintroduce the 'exit 0')
 	  sed -i "/^exit 0/d" /etc/rc.local
-	  # download the patch
-	  curl -# -o /tmp/rc_local.patch $RC_LOCAL_PATCH_URL
-	  # apply the patch
+	  _get_rc_local_patch
 	  echo "## rc.local_is_patched ## if this line is present rc.local has already been patched" >> /etc/rc.local
-	  cat /tmp/rc_local.patch >>  /etc/rc.local
-	  echo "## remove this wall block if you want rc_local.patch to be re-applied#" >> /etc/rc.local
-	  # clean up
-	  rm /tmp/rc_local.patch
+	  cat $RC_LOCAL_PATCH_PATH >>  /etc/rc.local
 	fi
+}
+
+function _configure_system() {	
+	_update_packages
+	_sync_clock
+	_setup_avahi
+	_setup_scheduled_shutdown
+	_get_xinitirc
+	_patch_rc_local
 	echo "The RPi Wallboard setup is compleated"
 }
 
-function rpi_setup(){
-	
-	
+function rpi_setup(){	
 	if [[ ! -z "$1" ]];then
 		#if an unknow parameter is passed
 		echo "Invalid stage '$1' specified"
