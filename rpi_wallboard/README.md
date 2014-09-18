@@ -108,11 +108,11 @@ sudo dd if=rpi_wallboard.img of=/dev/rdisk1 bs=1m
 
 #TODO
 * automate installation of config.txt
-* move rc_local.patch to /boot
-* before downloading the files from git make sure that they are not already in the current directory (or in boot)
+* ~~move rc_local.patch to /boot~~
+* ~~before downloading the files from git make sure that they are not already in the current directory (or in boot)~~
 * ~~make the hostname, SSID and SSID password (krypter or clear?) to be in a clear text in the boot directory (maybe config.txt) and be read by wallboard_setup.sh~~
-* organise wallboard_setup.sh in functions and maybe stages to run according to paramenters
-* make xinitrc to lauch wallbaord_setup.sh at every run (make sure that wallbaord_setup.sh run only part of the functions) so that thess SSID and hostname can be changed editing the config file
+* ~~organise wallboard_setup.sh in functions and maybe stages to run according to paramenters~~
+* ~~make xinitrc to lauch wallbaord_setup.sh at every run (make sure that wallbaord_setup.sh run only part of the functions) so that thess SSID and hostname can be changed editing the config file~~
 
 #License and Author
 Copyright (C) 2012 - 2013 Inviqa UK Ltd

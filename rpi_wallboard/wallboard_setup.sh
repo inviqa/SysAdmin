@@ -190,23 +190,23 @@ function _configure_system() {
 }
 
 function rpi_setup(){	
-	if [[ ! -z "$1" ]];then
-		#if an unknow parameter is passed
-		echo "Invalid stage '$1' specified"
-	elif [[ "$1" == "firstrun" ]]; then
+	if [[ "$1" == "firstrun" ]]; then
 		#if no parameter is pass
 		_update_hostname
 		_setup_wifi
 		_configure_system
 		echo "restart the RPi using 'sudo shutdown -r now'"
-	elif [[ "$1" == "wifiupdate" ]]; then
+	elif [[ "$1" == "hostnameupdate" ]]; then
 		_update_hostname
+	elif [[ "$1" == "wifiupdate" ]]; then
 		_update_wifi_credentials
 		_activate_wifi
 	else
+	#if an empty or invalid parameter is passed then it prints the usage
 		cat <<'EOF' 
 Usage: wallboard_setup.sh firstrun (only for very first run)
        wallboard_setup.sh wifiupdate (when you want to update the wifi SSID and secret)
+       wallboard_setup.sh hostnameupdate (when you want to change the hostname)
 EOF
 	fi
 }
