@@ -11,9 +11,8 @@ WIFI_CHECK_URL='https://raw.github.com/marcomc/rpi_wifi_check/master/WiFi_Check'
 function _update_hostname(){
 	#retieves the new hostname from the config.txt file
 	NEW_RPI_HOSTNAME=$(cat config.txt |grep hostname= | sed "/#/d" | cut -d = -f2)
-	if [ "$HOSTNAME" != "$NEW_RPI_HOSTNAME" ]; then
+	if [[ "$HOSTNAME" != "$NEW_RPI_HOSTNAME" && ! -z "$NEW_RPI_HOSTNAME" ]]; then
 		echo "Changing the hostname to $RPI_HOSTNAME"
-		function _install_nagios_rpms()
 		echo $NEW_RPI_HOSTNAME > /etc/hostname
 	fi
 }
@@ -28,11 +27,12 @@ function _update_wifi_credentials() {
 
 	# test if it's been specified a new compbination SSID and password
 	# if SSID and/or the SSID password have been changed then updates the interfaces file with the new values
-	if [[ ! -z "$SSID" && ]];then
+	if [ ! -z "$SSID" && ];then
 	  echo "Updating the WiFi SSID name"
 	  sed -i "s/^wpa-ssid.*$/^wpa-ssid \"$SSID\"/g" /etc/network/interfaces
 	fi
-	if [[ ! -z "$SSID_PWD_CRYPT"  ]];then
+
+	if [ ! -z "$SSID_PWD_CRYPT"  ];then
 	  echo "Updating the WiFi connection credentials"
 	  sed -i "s/^wpa-psk.*$/^wpa-psk $SSID_PWD_CRYPT/g" /etc/network/interfaces
 	  
@@ -149,10 +149,27 @@ EOF
 }
 
 function rpi_setup(){
-	_update_hostname
-	_setup_wifi
-	_configure_system
-	echo "restart the RPi using 'sudo shutdown -r now'"
+	
+	
+	if [[ ! -z "$1" ]];then
+		#if an unknow parameter is passed
+		echo "Invalid stage '$1' specified"
+	elif [[ "$1" == "firstrun" ]]; then
+		#if no parameter is pass
+		_update_hostname
+		_setup_wifi
+		_configure_system
+		echo "restart the RPi using 'sudo shutdown -r now'"
+	elif [[ "$1" == "wifiupdate" ]]; then
+		_update_hostname
+		_update_wifi_credentials
+		_activate_wifi
+	else
+		cat <<'EOF' 
+Usage: wallboard_setup.sh firstrun (only for very first run)
+       wallboard_setup.sh wifiupdate (when you want to update the wifi SSID and secret)
+EOF
+	fi
 }
 
-rpi_setup
+rpi_setup $1
