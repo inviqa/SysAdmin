@@ -13,7 +13,7 @@ In this specific case, for Inviqa, the Wallboard is preconfigured to login and s
 - Automatic Shutdown (best accompanied by a mains timer socket to turn it on periodically)
 
 #VNC connection
-By defaul the RPi Wallboard is accessible via VNC in Multi/Shared ViewOnly mode, with NO PASSWORD at the address 'wallboard.local' or 'vnc://wallboard.local' (for Safari)
+By defaul the RPi Wallboard is accessible via VNC in Multi/Shared ViewOnly mode, with NO PASSWORD at the address 'wallboard.local' or 'vnc://wallboard01.local' (for Safari)
 
 #SSH connection
 By defaul the RPi Wallboard is accessible via SSH on the local network using the addressl 'wallboard.local'
@@ -48,9 +48,13 @@ sudo dd if=2014-01-07-wheezy-raspbian.img of=/dev/rdisk1 bs=1m
 ```
 You can monitor the dumping progress via Activity Monitor (on a Mac), filtering for the dd process.
 ```
-* Copy the config.txt in the SD card BOOT partition.
-* Copy the xinitrc in the SD card BOOT partition.
 * Copy the wallboard_setup.sh script in the SD card BOOT partition.
+* Copy the config.txt in the SD card BOOT partition.
+* Copy the xinitrc in the SD card BOOT partition. -not mandatory-
+* Copy the rc_local.patch in the SD card BOOT partition. -not mandatory-
+
+Edit the config.txt and modify these parameters according to your specific needs:
+hostname, ssid, ssid_password (in clear)
 
 Gacefully unmount the SD card, then plug it into the RPi and turn the RPi on with a keyboard, mouse and screen connected (we need the keyboard & mouse just for the first run).
 
