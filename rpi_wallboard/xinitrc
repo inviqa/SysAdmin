@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 while true; do
 	#checks for updates in the hostname
-	/boot/wallboard_setup.sh hostnameupdate
+	bash /boot/wallboard_setup.sh hostnameupdate
 	#checks for updates in the wifi SSID or secret
-	/boot/wallboard_setup.sh wifiupdate
+	bash /boot/wallboard_setup.sh wifiupdate
         DEFAULT_URL="http://incubator.inviqa.com:8080//plugin/jenkinswalldisplay/walldisplay.html?viewName=Projects&jenkinsUrl=http%3A%2F%2Fincubator.inviqa.com%3A8080%2F"
 
 	# Clean up previously running apps, gracefully at first then harshly

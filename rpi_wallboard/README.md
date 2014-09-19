@@ -26,11 +26,13 @@ This instructions are for Mac OSX but can be easily adapted to be run on a Linux
 ##Install the latest Raspbian
 
 ```bash
-# Download the official installation image
-curl --progress-bar -o 2014-01-07-wheezy-raspbian.zip http://director.downloads.raspberrypi.org/raspbian/images/raspbian-2014-01-09/2014-01-07-wheezy-raspbian.zip
+# Download the official latest installation image
+http://downloads.raspberrypi.org/raspbian/images/
 
+i.e.
+curl --progress-bar -o 2014-09-09-wheezy-raspbian.zip http://downloads.raspberrypi.org/raspbian/images/raspbian-2014-09-12/2014-09-09-wheezy-raspbian.zip
 # unzip the raspbian image in your working directory
-unzip  2014-01-07-wheezy-raspbian.zip
+unzip  2014-09-09-wheezy-raspbian.zip
 ```
 Insert the SD card in the SD read of your computer.
 ```bash

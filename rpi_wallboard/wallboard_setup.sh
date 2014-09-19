@@ -25,20 +25,19 @@ function _update_hostname(){
 
 function _update_interfaces(){
 	# set up the WiFi card settings
+	if cat /etc/network/interfaces | grep "wallboard_setup_ok";then
+	  echo "wlan0 is already configured"
+	else
 
-	echo "Configuring wlan0 on /etc/network/interfaces"
-	# comment the lines we want to override
+	 echo "Configuring wlan0 on /etc/network/interfaces"
+	 # comment the lines we want to override
 	sed -i "s/^allow-hotplug wlan0.*$/#&/g" /etc/network/interfaces
 	sed -i "s/^iface wlan0 inet manual.*$/#&/g" /etc/network/interfaces
 	sed -i "s/^wpa-roam.*$/#&/g" /etc/network/interfaces
 	sed -i "s/^iface default inet dhcp.*$/#&/g" /etc/network/interfaces
 
-	if cat /etc/network/interfaces | grep "wallboard_setup_ok";then
-	  echo "wlan0 is already configured"
-	else
-	  echo "Configuring wlan0"
 	  # append the new settings to /etc/network/interfaces
-	  cat <<'EOF' >> /etc/network/interfaces
+	cat <<'EOF' >> /etc/network/interfaces
 ## wallboard_setup_ok ## if this line is present the wallboard_setup script will not work again
 auto wlan0
 allow-hotplug wlan0
@@ -56,21 +55,20 @@ function _update_wifi_credentials() {
 	# requires the paramaeter ssid_password= (clear password) to be set in config.txt
 	SSID_PWD=`cat config.txt |grep ssid_password= | sed "/#/d" | cut -d = -f2`
 	# comverts the clear password in a cripted password
-	SSID_PWD_CRYPT=`wpa_passphrase $SSID $SSID_PWD | grep psk | sed "/#/d" | cut -d'=' -f2`
 
 	# test if it's been specified a new compbination SSID and password
 	# if SSID and/or the SSID password have been changed then updates the interfaces file with the new values
-	if [ ! -z "$SSID" && ];then
+	if [[ ! -z "$SSID" ]];then
 	  echo "Updating the WiFi SSID name"
-	  sed -i "s/^wpa-ssid.*$/^wpa-ssid \"$SSID\"/g" /etc/network/interfaces
+	  sed -i "s/wpa-ssid.*$/wpa-ssid \"$SSID\"/g" /etc/network/interfaces
 	fi
-
-	if [ ! -z "$SSID_PWD_CRYPT"  ];then
+	SSID_PWD_CRYPT=$(wpa_passphrase $SSID $SSID_PWD | grep psk | sed "/#/d" | cut -d'=' -f2)
+	if [[ ! -z "$SSID_PWD_CRYPT" ]];then
 	  echo "Updating the WiFi connection credentials"
-	  sed -i "s/^wpa-psk.*$/^wpa-psk $SSID_PWD_CRYPT/g" /etc/network/interfaces
+	  sed -i "s/wpa-psk.*$/wpa-psk $SSID_PWD_CRYPT/g" /etc/network/interfaces
 	  
 	  #for security reasons the clear copy of the password is removed from the config.txt after been used in the network interface configuration file
-	  sed -i "s/^ssid_password=.*$/ssid_password=/g" /etc/network/interfaces
+	  sed -i "s/ssid_password=.*$/ssid_password=/g" /boot/config.txt
 	fi
 
 }
@@ -170,12 +168,16 @@ function _patch_rc_local(){
 	if cat /etc/rc.local | grep "rc.local_is_patched"; then
 	  echo "/etc/rc.local is alredy patched"
 	else
+	  echo "Backup of /etc/rc.local as /etc/rc.local.bk"
+	  cp -a /etc/rc.local /etc/rc.local.bk
 	  echo "Patching /etc/rc.local to load the new xinitrc file" 
 	  # removed the 'exit 0' to allow to append the rc.local patch (which will reintroduce the 'exit 0')
 	  sed -i "/^exit 0/d" /etc/rc.local
 	  _get_rc_local_patch
 	  echo "## rc.local_is_patched ## if this line is present rc.local has already been patched" >> /etc/rc.local
 	  cat $RC_LOCAL_PATCH_PATH >>  /etc/rc.local
+	  mv /etc/rc.local /boot/rc.local
+	  ln -s /boot/rc.local /etc/rc.local
 	fi
 }
 
@@ -184,7 +186,7 @@ function _configure_system() {
 	_sync_clock
 	_setup_avahi
 	_setup_scheduled_shutdown
-	_get_xinitirc
+	_get_xinitrc
 	_patch_rc_local
 	echo "The RPi Wallboard setup is compleated"
 }
