@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # run this script as 'root' or with 'sudo'
+RPI_CONFIG='/boot/config.txt'
 
 RC_LOCAL_PATCH_PATH='/boot/rc_local.patch'
 RC_LOCAL_PATCH_URL='https://raw.github.com/inviqa/SysAdmin/master/rpi_wallboard/rc_local.patch'
@@ -15,11 +16,13 @@ WIFI_CHECK_CRONJOB='/etc/cron.d/WiFi_Check'
 SCHEDULED_SHUTDOWN_CRONJOB='/etc/cron.d/ScheduledShutdown'
 
 function _update_hostname(){
-	#retieves the new hostname from the config.txt file
-	NEW_RPI_HOSTNAME=$(cat config.txt |grep hostname= | sed "/#/d" | cut -d = -f2)
+	#retieves the new hostname from the $RPI_CONFIG file
+	NEW_RPI_HOSTNAME=$(cat $RPI_CONFIG |grep hostname= | sed "/#/d" | cut -d = -f2)
 	if [[ "$HOSTNAME" != "$NEW_RPI_HOSTNAME" && ! -z "$NEW_RPI_HOSTNAME" ]]; then
-		echo "Changing the hostname to $RPI_HOSTNAME"
+		echo "Changing the hostname to $NEW_RPI_HOSTNAME"
 		echo $NEW_RPI_HOSTNAME > /etc/hostname
+	  	sed -i "s/127.0.1.1.*$/127.0.1.1 $NEW_RPI_HOSTNAME/g" /etc/hosts
+		hostname $NEW_RPI_HOSTNAME
 	fi
 }
 
@@ -50,10 +53,10 @@ EOF
 
 }
 function _update_wifi_credentials() {
-	# requires the paramaeter ssid= to be set in config.txt
-	SSID=`cat config.txt |grep ssid= | sed "/#/d" | cut -d = -f2`
-	# requires the paramaeter ssid_password= (clear password) to be set in config.txt
-	SSID_PWD=`cat config.txt |grep ssid_password= | sed "/#/d" | cut -d = -f2`
+	# requires the paramaeter ssid= to be set in $RPI_CONFIG
+	SSID=`cat $RPI_CONFIG |grep ssid= | sed "/#/d" | cut -d = -f2`
+	# requires the paramaeter ssid_password= (clear password) to be set in $RPI_CONFIG
+	SSID_PWD=`cat $RPI_CONFIG |grep ssid_password= | sed "/#/d" | cut -d = -f2`
 	# comverts the clear password in a cripted password
 
 	# test if it's been specified a new compbination SSID and password
@@ -67,8 +70,8 @@ function _update_wifi_credentials() {
 	  echo "Updating the WiFi connection credentials"
 	  sed -i "s/wpa-psk.*$/wpa-psk $SSID_PWD_CRYPT/g" /etc/network/interfaces
 	  
-	  #for security reasons the clear copy of the password is removed from the config.txt after been used in the network interface configuration file
-	  sed -i "s/ssid_password=.*$/ssid_password=/g" /boot/config.txt
+	  #for security reasons the clear copy of the password is removed from the $RPI_CONFIG after been used in the network interface configuration file
+	  sed -i "s/ssid_password=.*$/ssid_password=/g" $RPI_CONFIG
 	fi
 
 }
@@ -115,7 +118,7 @@ function _update_packages(){
 	apt-get -qy remove lightdm-gtk-greeter
 	# install the avahi-daemon to be able to access the RPi as wallboard.local
 	echo "Installing Lightdm, Avahi Daemon, VNC and Chromium"
-	apt-get -qy install avahi-daemon x11vnc chromium vim chkconfig matchbox-window-manager ntpdate
+	apt-get -qy install avahi-daemon x11vnc chromium vim chkconfig matchbox-window-manager ntpdate xwit sqlite3 x11-xserver-utils
 	echo "Cleaning up with auto-remove"
 	apt-get -qy autoremove
 }

@@ -20,7 +20,7 @@ By defaul the RPi Wallboard is accessible via SSH on the local network using the
 user: pi
 password: raspberry
 
-#How-To build a Raspberry Pi Wall board
+#How-To build a Raspberry Pi Wall board Gold-Image
 This instructions are for Mac OSX but can be easily adapted to be run on a Linux host.
 
 ##Install the latest Raspbian
@@ -93,7 +93,7 @@ Sum these two value and divide it by 1048576 (1024 * 1024) to know how many MB o
 **58720256 + 2899312640 = 2958032896 Bytes / 1024 / 1024 = 2821 MB**
 ```
 
-##Create the backup image
+##Create the backup image - Used as Gold-Image
 Unmount the all the SD partition without ejecting the device
 ```
 diskutil unmountDisk /dev/disk1
@@ -107,10 +107,16 @@ Start the dumping with 'dd'
 sudo dd of=rpi_wallboard.img if=/dev/rdisk1 bs=1m count=2900
 ```
 
-#Restore from a backup image
+#Restore from a backup image - Using the Gold-Image
 ```
 sudo dd if=rpi_wallboard.img of=/dev/rdisk1 bs=1m
 ```
+Mount the /boot partition in your host computer
+Edit the /boot/config.txt file
+Set the following paramenters:
+* hostname=
+* ssid=
+* ssid_password=
 
 #TODO
 * automate installation of config.txt
