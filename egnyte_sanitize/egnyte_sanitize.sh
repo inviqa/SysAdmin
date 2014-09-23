@@ -17,7 +17,7 @@ echo '----- BEGIN OF SANITATION @' `eval date` ' ----' > $LOG_FILE
 IFS="-"
 # list of file naming defects that create exceptions tha ELC is not able to handle
 # like names with multiple spaces, trailing spaces, trailing dots, leading spaces or semi-colon symbols
-EXPTS=" *-* -*.-*  *-*:*-*|*"
+EXPTS=" *-* -*.-*  *-*:*-*|*\?*\"*"
 
 
 # For each exception
