@@ -119,6 +119,11 @@ Set the following paramenters:
 * ssid_password=
 
 #TODO
+1. Specify the robot's login details in the config.txt file
+...so that the password is blanked after the first use and that if we update the login details these are refreshed in Chromium as well
+2. Find a way to inject these in Chromium so that we automate that initial setup as well
+3. Then we also find a way to aumate the 30-day relogin in Chromium
+steps 2 and 3 could be automated with behat
 
 #License and Author
 Copyright (C) 2012 - 2013 Inviqa UK Ltd
