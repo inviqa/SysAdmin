@@ -84,11 +84,9 @@ function getRowAsArray(sheet, row) {
  * @return a new document with a given name from the orignal
  */
 function createDuplicateDocument(sourceId, name) {
-    var source = DocsList.getFileById(sourceId);
-    var newFile = source.makeCopy(name);
-
-    var targetFolder = DocsList.getFolderById(TARGET_FOLDER);
-    newFile.addToFolder(targetFolder);
+    var source = DriveApp.getFileById(sourceId);
+    var targetFolder = DriveApp.getFolderById(TARGET_FOLDER);
+    var newFile = source.makeCopy(name, targetFolder);
 
     return DocumentApp.openById(newFile.getId());
 }
