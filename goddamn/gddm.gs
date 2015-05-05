@@ -1,3 +1,4 @@
+
 /**
  * GoDDaMn is inspired by  the Google Script project named 'Generate Google Docs' by Mikko Ohtamaa (http://opensourcehacker.com)
  * http://opensourcehacker.com/2013/01/21/script-for-generating-google-documents-from-google-spreadsheet-data-source/
@@ -84,12 +85,11 @@ function getRowAsArray(sheet, row) {
  * @return a new document with a given name from the orignal
  */
 function createDuplicateDocument(sourceId, name) {
-    var source = DocsList.getFileById(sourceId);
-    var newFile = source.makeCopy(name);
+    var source = DriveApp.getFileById(sourceId);
+    var targetFolder = DriveApp.getFolderById(TARGET_FOLDER);
+    var newFile = source.makeCopy(name, targetFolder);
 
-    var targetFolder = DocsList.getFolderById(TARGET_FOLDER);
-    newFile.addToFolder(targetFolder);
-
+    /** newFile.addToFolder(targetFolder);*/
     return DocumentApp.openById(newFile.getId());
 }
 /**
@@ -189,3 +189,4 @@ function generateEmployeeDatasheet() {
   }
 
 }
+
