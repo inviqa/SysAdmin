@@ -109,14 +109,16 @@ echo "" > $OUTPUT # clear the 'page'
 echo "<p>The following mailing lists are available for staff use.</p>" >> $OUTPUT
 # Manifesto - to be set in an external file to include/cat or to be set in a variable in the gginfo file
 echo "<p>The people listed as 'owner' for a specific Google Group (mailing-list) have the ability to add and remove other members from their Google Groups administration panel with the need to fall back the request to the Support Team.</p>" >> $OUTPUT
-echo "<p><strong>We encourage whoever has the need to be added or removed to/from a mailing-list to check first who's the owner of it and direct the request to her/him</p> before defaulting to the Support Team, that will give us a bit of breath on the over all quantity of tasks we perform.</p>" >> $OUTPUT
+echo "<p><strong>We encourage whoever has the need to be added or removed
+to/from a mailing-list to check first who's the owner of it and direct the
+request to her/him</strong> before defaulting to the Support Team, that will give us a bit of breath on the over all quantity of tasks we perform.</p>" >> $OUTPUT
 
 echo "<p>/In case a group doesn't have a owner we will be happy to assign one or more (but it's not mandatory).</p>" >> $OUTPUT
 echo "<p>it's possible to review the Groups you are member of, at this link<br /><a href=\"https://groups.google.com/a/inviqa.com/forum/?hl=en&amp;fromgroups#!myforums\">https://groups.google.com/a/inviqa.com/forum/?hl=en&amp;fromgroups#!myforums</a></p>" >> $OUTPUT
 echo "<p><strong>If you are owner of a group you can even add/remove new members and review the access/security settings of the group</strong></p>" >> $OUTPUT
 # End of Manifesto
 echo "<p>This list is generated using the script $0 on the host `hostname`</p>" >> $OUTPUT
-echo "<div class="message-content"><strong>If this page is not showing any list most probably the issue is with outdated Time Settings of the `hostname` therefore the Google servers refuse the OAUTH2 connection.'.</strong></div>" >> $OUTPUT
+echo "<div><strong>If this page is not showing any list most probably the issue is with outdated Time Settings of the `hostname` therefore the Google servers refuse the OAUTH2 connection.'.</strong></div>" >> $OUTPUT
 echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
 
 # takes in input the LIST_OF_GROUPS (which is a CSV list)
