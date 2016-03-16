@@ -46,17 +46,12 @@ function _get_variables() {
       -r|--remote)
         SOCKSPROXY_REMOTE_SERVER="${2}";
         shift
-      ;;
-      -rp|--remoteport)
-        SOCKSPROXY_REMOTE_SERVER_PORT="${2}";
-        shift
-      ;;
       -l|--local)
         SOCKSPROXY_LOCAL_SERVER="${2}";
         shift
       ;;
-      -lp|--localport)
-        SOCKSPROXY_LOCAL_SERVER_PORT="${2}";
+      -p|--port)
+        SOCKSPROXY_PORT="${2}";
         shift
       ;;
       -n|--network)
