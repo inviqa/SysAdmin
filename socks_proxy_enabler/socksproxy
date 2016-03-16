@@ -46,6 +46,7 @@ function _get_variables() {
       -r|--remote)
         SOCKSPROXY_REMOTE_SERVER="${2}";
         shift
+      ;;
       -l|--local)
         SOCKSPROXY_LOCAL_SERVER="${2}";
         shift
