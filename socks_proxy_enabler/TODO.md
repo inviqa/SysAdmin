@@ -1,3 +1,0 @@
-- [ ] add a 'Usage' print if no parameter is passed on
-- [ ] add installation instructions
-- [ ] add menu icon enabler

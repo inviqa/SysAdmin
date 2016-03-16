@@ -28,3 +28,7 @@ NETWORK_SERVICE='Wi-Fi';
 # this will override any config file parameters
 ./socksproxy --verbose --sudo [ --enable | --disable ] --remote server_name --local server_name --port port_number --network service
 ```
+# TODO
+- [ ] add a 'Usage' print if no parameter is passed on
+- [ ] add installation instructions
+- [ ] add menu icon enabler
