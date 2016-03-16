@@ -1,2 +1,2 @@
 - make the script a service with an icon?
-- when killing the script stop the proxy and stop the ssh connection to frontdoor
+- add a 'Usage' print if no parameter is passed on
