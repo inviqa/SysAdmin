@@ -7,10 +7,10 @@ function _get_variables() {
   # first set the script defauls
 
   SERVICE_ENABLE='';
+  SUDO_ENABLE=false;
   SOCKSPROXY_REMOTE_SERVER='';
-  SOCKSPROXY_REMOTE_SERVER_PORT='8080';
   SOCKSPROXY_LOCAL_SERVER='localhost';
-  SOCKSPROXY_LOCAL_SERVER_PORT='8080';
+  SOCKSPROXY_PORT='8080';
   NETWORK_SERVICE='Ethernet';
 
   local VERBOSE=false;
@@ -33,6 +33,9 @@ function _get_variables() {
     case $option in
       -v|--verbose)
         VERBOSE=true;
+      ;;
+      --sudo)
+        SUDO_ENABLE=true;
       ;;
       --enable)
         SERVICE_ENABLE="on";
@@ -79,38 +82,51 @@ function _get_variables() {
 }
 
 function _print_paramaters() {
-  _echo "SERVICE_ENABLE: $SERVICE_ENABLE
+  _echo "SUDO_ENABLE: $SUDO_ENABLE
+SERVICE_ENABLE: $SERVICE_ENABLE
 SOCKSPROXY_REMOTE_SERVER: $SOCKSPROXY_REMOTE_SERVER
-SOCKSPROXY_REMOTE_SERVER_PORT: $SOCKSPROXY_REMOTE_SERVER_PORT
 SOCKSPROXY_LOCAL_SERVER: $SOCKSPROXY_LOCAL_SERVER
-SOCKSPROXY_LOCAL_SERVER_PORT: $SOCKSPROXY_LOCAL_SERVER_PORT
+SOCKSPROXY_PORT: $SOCKSPROXY_PORT
 NETWORK_SERVICE: $NETWORK_SERVICE";
 }
 
 function _remoteproxy_connect() {
-ssh frontdoor -D 8080
+  local SSH_COMMAND="ssh -f -N -T -M $SOCKSPROXY_REMOTE_SERVER -D $SOCKSPROXY_PORT"
+  eval $SSH_COMMAND
+  _echo "CONNECTED TO $SOCKSPROXY_REMOTE_SERVER PROXY SERVER ON PORT $SOCKSPROXY_PORT";
 }
 function _remoteproxy_disconnect() {
- _echo "PROXY SERVER DISCONNECTED";
+  # requires
+  # ControlPath ~/.ssh/xxxxx.ctl
+  # in .ssh/config
+
+  local SSH_COMMAND="ssh -T -O 'exit' $SOCKSPROXY_REMOTE_SERVER"
+  eval $SSH_COMMAND
+  _echo "PROXY SERVER DISCONNECTED";
 }
 function _socksproxy_activate() {
   #with parameters passed
-  networksetup -setsocksfirewallproxy "Wi-Fi" localhost 8080
-  _echo "PROXY SERVER CONNECTED"
+  local COMMAND="networksetup -setsocksfirewallproxy "$NETWORK_SERVICE" $SOCKSPROXY_LOCAL_SERVER $SOCKSPROXY_PORT"
+  eval $SUDO $COMMAND
+  _echo "PROXY SERVER ENABLED"
 }
 function _socksproxy_deactivate() {
-  networksetup -setsocksfirewallproxystate off
-
+  local COMMAND="networksetup -setsocksfirewallproxystate "$NETWORK_SERVICE" off"
+  eval $SUDO $COMMAND
+  _echo "PROXY SERVER DISABLED"
 }
 
 function manage_proxy() {
+
   if ! _get_variables "${@}" ; then
     # brakes the execution if some unknown parameters are detected
     # therefore _get_variables has returned "1"
     _echo "OPERATION ABORTED";
     exit 1
   fi
-
+  if $SUDO_ENABLE;then
+    SUDO="sudo"
+  fi
   if [[  "${SERVICE_ENABLE}" == "on" ]]; then
     _remoteproxy_connect;
     _socksproxy_activate;
