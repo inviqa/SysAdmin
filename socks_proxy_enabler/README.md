@@ -1,5 +1,7 @@
 # prerequisites
-configure ~/.ssh/config file with the following
+This script is solely for OSX environments
+
+Configure `~/.ssh/config` file with the following
 ```
 Host frontdoor frontdoor2.inviqa.com
       HostName frontdoor2.inviqa.com
@@ -7,6 +9,7 @@ Host frontdoor frontdoor2.inviqa.com
 ```
 
 # Config File
+The config file is optional, all the parameters can be passed via command line
 ```
 #### ~/.socksproxyrc
 SERVICE_ENABLE='on';
