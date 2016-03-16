@@ -1,2 +1,3 @@
-- make the script a service with an icon?
-- add a 'Usage' print if no parameter is passed on
+- [ ] add a 'Usage' print if no parameter is passed on
+- [ ] add installation instructions
+- [ ] add menu icon enabler
