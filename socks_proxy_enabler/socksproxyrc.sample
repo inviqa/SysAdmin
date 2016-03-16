@@ -1,0 +1,10 @@
+SERVICE_ENABLE='on';
+SUDO_ENABLE=true;
+VERBOSE=true;
+SOCKSPROXY_REMOTE_SERVER='frontdoor';
+SOCKSPROXY_LOCAL_SERVER='localhost';
+SOCKSPROXY_PORT='8080';
+NETWORK_SERVICE='Wi-Fi';
+# list your NETWORK_SERVICE(S)
+# with
+# `networksetup -listallnetworkservices`
