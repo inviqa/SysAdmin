@@ -23,6 +23,7 @@ function _update_hostname(){
 		echo $NEW_RPI_HOSTNAME > /etc/hostname
 	  	sed -i "s/127.0.1.1.*$/127.0.1.1 $NEW_RPI_HOSTNAME/g" /etc/hosts
 		hostname $NEW_RPI_HOSTNAME
+		service avahi-daemon restart
 	fi
 }
 
