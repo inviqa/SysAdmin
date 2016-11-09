@@ -1,0 +1,4 @@
+[project_name]
+production.client.com   ansible_user=root   ansible_ssh_pass=password_for_this_server
+uat.client.com          ansible_user=root   ansible_ssh_pass=password_for_this_server
+qa.client.com           ansible_user=root   ansible_ssh_pass=password_for_this_server

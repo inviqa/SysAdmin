@@ -1,0 +1,51 @@
+---
+- hosts: all
+  gather_facts: true
+  become: yes
+  become_method: sudo
+
+  tasks:
+    - name: stop jcagent
+      service: name=jcagent state=stopped
+      ignore_errors: true
+
+    - name: remove jcagent from apt based system
+      apt:
+        name: jcagent
+        state: absent
+      when: ansible_pkg_mgr == 'apt'
+
+    - name: remove jcagent from yum based system
+      yum:
+        name: jcagent
+        state: absent
+      when: ansible_pkg_mgr == 'yum'
+
+    - name: remove /opt/jc diretory
+      file: path=/opt/jc state=absent
+s
+    - name: delete users_list
+      command: deluser --remove-home {{item}}
+      with_items: "{{users_list}}"
+      when: users_list is defined
+      ignore_errors: true
+
+    - name: delete all JC's user sudoers files
+      file:
+        path: /etc/sudoers.d/{{item}}-jumpcloud
+        state: absent
+      with_items: "{{users_list}}"
+      when: users_list is defined
+
+    - name: delete all JC's inviqa sudoers files
+      file:
+        path: /etc/sudoers.d/inviqa-*
+        state: absent
+
+    - name: list of residual users
+      shell: ls /home/
+      register: home_dirs
+
+    - debug: msg="{{ansible_hostname}} - {{home_dirs.stdout}}"
+
+...
