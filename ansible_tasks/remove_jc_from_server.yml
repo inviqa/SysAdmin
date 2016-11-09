@@ -1,0 +1,57 @@
+---
+- hosts: all
+  gather_facts: true
+  become: yes
+  become_method: sudo
+  
+  tasks:
+    - name: stop jcagent
+      service: name=jcagent state=stopped
+      ignore_errors: true
+
+    - name: remove jcagent from apt based system
+      apt:
+        name: jcagent
+        state: absent
+      when: ansible_pkg_mgr == 'apt'
+
+    - name: remove jcagent from yum based system
+      yum:
+        name: jcagent
+        state: absent
+      when: ansible_pkg_mgr == 'yum'
+
+    - name: remove /opt/jc diretory
+      file: path=/opt/jc state=absent
+
+    # - name: update RSA KEY
+    #   lineinfile: dest=/home/deploy/.ssh/authorized_keys regexp='^dreams@webistrano' line='ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDNiLd5rpo+K+Lg3vzEXljFuITg+5eKBz7aCgpW61Nfd+oayHmp0FWsJtcSfCPAEqQ8jS18EYFHJ628t750AmQH0jB1Y5Qy5ItIjo3QRzXevh+YeAOlXPXvAQ1cy3NVYwqhEIYqC8y0fa3jXY5hQjT+NLyrnzcaAhqxVrXbY0xsyL+RZaHBZA3UitDU3Ri1HaGUKAkh2+gXpzn+n1+KivfmviZ+NIvXoZWC94txydcbEzAxBbK1BbUzgVvAn1x4Jnu4Ya3rSJklbRZdWUgTEsJtP51/+auJvnWdcR4a7M/nCxW4CmNlSrkZ5Xvstsnpz6N0HxfyxCmgjO604FzMj4ZkkbjG8xrADrx5YH85EbwxYI3CVvaH9EDt2o/r/zp4d/mIf847nTlbJgMWxV3Q1nsR/gMyUhEdHY9ZA3hiKK5/DDyjRR6me+9EjCac117qD0VcTmkqStlPj1fQjJP99yFP7kJhWMWL0qun8nIAp8CpGIpnoIXHsRy112gdYyyUqoJq0Jk/OQz0fbmTBrB0D0FF646pysjUbAOEYv37hVZ770LExz6KGL/J7R+VoJ4xCMGLffYnE7NKnfgCSL163129yjGom7etwYlpbzMhRd4E1KXevNd0KRsaq7fEPO7s/r8i5n7Q71zH84PKpo6b8RUmvNtSgKvzAR1MmSLHgLm01Q== dreams@webistrano'
+    #
+    # - name: find authorized_keys
+    #   command: cat /home/deploy/.ssh/authorized_keys
+    - name: delete users_list
+      command: deluser --remove-home {{item}}
+      with_items: "{{users_list}}"
+      when: users_list is defined
+      ignore_errors: true
+
+    - name: delete all JC's user sudoers files
+      file:
+        path: /etc/sudoers.d/{{item}}-jumpcloud
+        state: absent
+      with_items: "{{users_list}}"
+      when: users_list is defined
+
+    - name: delete all JC's inviqa sudoers files
+      file:
+        path: /etc/sudoers.d/inviqa-*
+        state: absent
+
+    - name: list of residual users
+      shell: ls /home/
+      register: home_dirs
+
+    - debug: msg="{{ansible_hostname}} - {{home_dirs.stdout}}"
+    #  with_items: "{{home_dirs}}"
+
+...
