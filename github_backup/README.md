@@ -16,11 +16,12 @@ Place the scripts in a common path i.e. "/usr/bin" or any bin path available to 
 'github_backup' requires a .github_info file to be placed in path reachable by the user that will execute the script i.e. the homefolder, and its path need to defined in the github_backup script (~/.github_info by default)
 
 '.github_info' must contain the following information:
-- USERNAME="<username>"
-- PASSWORD="<Personal access tokens>"
-- ORGANIZATION="<organisation>"
-- OVERWRITE="true|false" #if a backup already exists do or not overwrite it, default true (overwrite it)
-
+```
+USERNAME="<username>"
+PASSWORD="<Personal access tokens>"
+ORGANIZATION="<organisation>"
+OVERWRITE="true|false" #if a backup already exists do or not overwrite it, default true (overwrite it)
+```
 Protect the GitHub login information:
 - storing the file in the home folder of the user(s) that will execute the script
 - defining the ownership of '.github_info' to <user>:<user>
