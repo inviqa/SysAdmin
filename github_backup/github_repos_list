@@ -32,7 +32,7 @@ if [ -f $GITHUB_CREDENTIALS ]; then
     # USERNAME="<username>"
     # PASSWORD="<password>"
     # ORGANIZATION="<organisation>"
-    # 
+    #
     # protect the GitHub login information:
     # - storing the file in the home folder of the user(s) that will execute the script
     # - defining the ownershit of '.github_info' to <user>:<user>
@@ -53,20 +53,18 @@ NAME=""
 
 # used to suppress curl noise
 STDERR_REDIR='/dev/null'
-
-GIT_URL="curl -u \"$USERNAME:$PASSWORD\" https://api.github.com/orgs/$ORGANIZATION/repos"
-
-names=($(curl -u "$USERNAME:$PASSWORD" https://api.github.com/orgs/$ORGANIZATION/repos 2> /dev/null | grep name | cut -f4 -d'"' ))
-
-ssh_urls=($(curl -u "$USERNAME:$PASSWORD" https://api.github.com/orgs/$ORGANIZATION/repos 2> /dev/null | grep ssh_url | cut -f4 -d'"' ))
-
-elements=${#names[@]}
-
-for (( i=0; i<${elements}; i++ ));
+for (( page=1; page<100; page++ ));
 do
-        echo "name=${names[$i]} ssh_url=${ssh_urls[$i]}"
+  GIT_URL="curl -u \"$USERNAME:$PASSWORD\" https://api.github.com/orgs/$ORGANIZATION/repos?page=$page\&per_page=100"
+
+  names=($(curl -u "$USERNAME:$PASSWORD" https://api.github.com/orgs/$ORGANIZATION/repos?page=$page\&per_page=100 2> /dev/null | grep name | cut -f4 -d'"' ))
+
+  ssh_urls=($(curl -u "$USERNAME:$PASSWORD" https://api.github.com/orgs/$ORGANIZATION/repos?page=$page\&per_page=100 2> /dev/null | grep ssh_url | cut -f4 -d'"' ))
+
+  elements=${#names[@]}
+
+  for (( i=0; i<${elements}; i++ ));
+  do
+          echo "name=${names[$i]} ssh_url=${ssh_urls[$i]}"
+  done
 done
-
-
-
-

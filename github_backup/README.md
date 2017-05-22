@@ -3,11 +3,10 @@
 
 'github_backup' is a BASH script that performs a check-out of all the Git repositories present at a give github.com account.
 
-It etrives the list of all the repositories present on the github.com account and then is able to perform the backu
-p of all the new repositories created since the last backup, with no need to update the script when repositories are added or removed. 
+It etrives the list of all the repositories present on the github.com account and then is able to perform the backup of all the new repositories created since the last backup, with no need to update the script when repositories are added or removed.
 
 The checked-out directories are then compressed in tar.gz archives and stored in a designated backup folder.
- 
+
 Only one copy of the archive is kept for each repository because the nature of the git repository, already provides means to retrived older versions of the files managed on the git repository (via the use of standard git commands).
 
 #Installation
@@ -18,12 +17,13 @@ Place the scripts in a common path i.e. "/usr/bin" or any bin path available to 
 
 '.github_info' must contain the following information:
 - USERNAME="<username>"
-- PASSWORD="<password>"
+- PASSWORD="<Personal access tokens>"
 - ORGANIZATION="<organisation>"
- 
+- OVERWRITE="true|false" #if a backup already exists do or not overwrite it, default true (overwrite it)
+
 Protect the GitHub login information:
 - storing the file in the home folder of the user(s) that will execute the script
-- defining the ownershit of '.github_info' to <user>:<user>
+- defining the ownership of '.github_info' to <user>:<user>
 - defining the permissions of '.github_info' to 600
 
 #Usage
@@ -48,4 +48,3 @@ This program is free software: you can redistribute it and/or modify it under th
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with this program. If not, see http://www.gnu.org/licenses/.
-
