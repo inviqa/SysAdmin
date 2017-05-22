@@ -2,7 +2,7 @@
 Install Tugboat, the command-line interface to DigitalOcean https://github.com/pearkes/tugboat
 
 # Inventory
-Use `cerae_inventory.sh` makes use of tugboat to generate an inventory of IPs of all your DO droplets to be used with the Ansible playbook included in this project.
+Use `create_inventory.sh` to generate (via Tugboat) an inventory of IPs of all your DO droplets to be used with the Ansible playbook included in this project.
 
 The Ansible playbook installs the `DO-Agent` in all the droplets of inventory given that you connect as root or that your use has sudo capabilities.
 
