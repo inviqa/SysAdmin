@@ -1,0 +1,13 @@
+---
+- hosts: droplets
+  gather_facts: false
+  tasks:
+  - name: Update DO-Agent
+    shell: >
+            curl -sSL https://agent.digitalocean.com/install.sh | sh
+
+    become: true
+    # notify:
+    #   - restart JumpCloud
+
+...
