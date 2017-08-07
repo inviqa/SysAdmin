@@ -23,7 +23,7 @@
 # If not, see http://www.gnu.org/licenses/.
 #
 ###############################################################################
-# 
+#
 ################################ REQUIREMENTS #################################
 # this script requires GAM configure to access a Google Apps account via OAUTH
 # http://code.google.com/p/google-apps-manager/
@@ -40,7 +40,7 @@
 ###############################################################################
 
 DATE=`date`
-PYTHON=`which python 2>/dev/null` # Python 2.5+ is required
+#PYTHON=`which python 2>/dev/null` # Python 2.5+ is required
 CADAVER=`which cadaver 2>/dev/null`
 # manually define the path to the gam script, or link the gam.py in a common PATH like /usr/bin
 # set 755 permissions to the gam.py script (so that you can invoke it without using 'python' command
@@ -80,11 +80,11 @@ if [ ! -f "${GAM}" ]; then
 	exit
 fi
 
-# Fetch of the list of available groups 
-#eval $PYTHON $GAM print groups name description members owners > $LIST_OF_GROUPS
+# Fetch of the list of available groups
+#eval $GAM print groups name description members owners > $LIST_OF_GROUPS
 
 ## fetch the list of the active groups and aliases
-eval $PYTHON $GAM print groups name aliases > $LIST_OF_GROUPS 2>/dev/null
+eval $GAM print groups name aliases > $LIST_OF_GROUPS 2>/dev/null
 
 # according to the parameter passed to GAM the column descriptor may change
 # we will use column descriptor as a patter to indentify the point from which is the groups are listed in the List of Groups file, in fact if we ask to show the aliases the aliases will ALSO printed before the list of groups but this is a duplicate information that we don't need
@@ -123,18 +123,18 @@ while read groupname name aliases
 do
         # prints the head of the section describing a group
         echo "<br/>"$'\n'"<strong>$name</strong> - <a href=\"mailto:$groupname\">$groupname</a>" >> $OUTPUT
-  
+
         # start printing the list of aliases if any
         # checks that the LIST_OF_ALIASES is NOT an empty list or contains only spaces
         if [ ! -z "$aliases" -a "$aliases"!=" " ]; then
           # transform the aliases list replacing the spaces with commas, because the IFS is set to ','
           aliases=${aliases// /,}
-  
+
           # this list must be transformed in a array
           read -a LIST_OF_ALIASES <<< "$aliases"
-      
+
           echo '<ul>' >> $OUTPUT
-  
+
           for alias in "${LIST_OF_ALIASES[@]}"
           do
             echo "<li>alias: <a href=\"mailto:$alias\">$alias</a></li>" >> $OUTPUT
@@ -144,8 +144,8 @@ do
         # start printing the list of owners and members
         echo '<ul>' >> $OUTPUT
 	# echo "<a href=\"mailto:$groupname\">$groupname</a>" >> $OUTPUT
-	eval $PYTHON $GAM info group $groupname | grep "owner:" | cut -f2,3 -d" " | sed -e 's/^/<li>/g;s/$/<\/li>/g' >> $OUTPUT
-	eval $PYTHON $GAM info group $groupname | grep "member:" | cut -f2,3 -d" " | sed -e 's/^/<li>/g;s/$/<\/li>/g' >> $OUTPUT
+	eval $GAM info group $groupname | grep "owner:" | cut -f2,3 -d" " | sed -e 's/^/<li>/g;s/$/<\/li>/g' >> $OUTPUT
+	eval $GAM info group $groupname | grep "member:" | cut -f2,3 -d" " | sed -e 's/^/<li>/g;s/$/<\/li>/g' >> $OUTPUT
 	echo "</ul>"$'\n' >> $OUTPUT
 
 done < $LIST_OF_GROUPS
@@ -160,7 +160,7 @@ if [ -f "${OUTPUT}" ]; then
 	# Run the 'cadaver' command, upload files from the tmp file
 	${CADAVER} >/dev/null << EOF
         open $WEBDAVHOST
-        cd "$PAGEPATH"   
+        cd "$PAGEPATH"
         put "$OUTPUT"
 EOF
 
@@ -170,6 +170,3 @@ EOF
 else
 	echo "$0 - ERROR: Unable to find the file \'${OUTPUT}\'"
 fi
-
-
-
