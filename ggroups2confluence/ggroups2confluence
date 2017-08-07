@@ -45,7 +45,7 @@ CADAVER=`which cadaver 2>/dev/null`
 # manually define the path to the gam script, or link the gam.py in a common PATH like /usr/bin
 # set 755 permissions to the gam.py script (so that you can invoke it without using 'python' command
 # or so that the script can locate it's position
-GAM=`which gam.py 2>/dev/null`
+GAM=`which --skip-alias gam.py 2>/dev/null`
 
 WEBDAV_INFO=~/.gginfo
 
