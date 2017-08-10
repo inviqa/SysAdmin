@@ -26,8 +26,8 @@
 #
 ################################ REQUIREMENTS #################################
 # this script requires GAM configure to access a Google Apps account via OAUTH
-# http://code.google.com/p/google-apps-manager/
-# You need to plage the gam.py script in a common path i.e. /usr/bin
+# https://github.com/jay0lee/GAM
+# You need to plage the gam script in a common path i.e. /usr/bin
 #
 # The 'cadaver' tool and 'python v2.5+' need to be installed in order for the script to work.
 # 'cadaver' needs a .netrc file with WebDav's authentication information
@@ -42,10 +42,10 @@
 DATE=`date`
 #PYTHON=`which python 2>/dev/null` # Python 2.5+ is required
 CADAVER=`which cadaver 2>/dev/null`
-# manually define the path to the gam script, or link the gam.py in a common PATH like /usr/bin
-# set 755 permissions to the gam.py script (so that you can invoke it without using 'python' command
+# manually define the path to the gam script, or link the gam in a common PATH like /usr/bin
+# set 755 permissions to the gam script (so that you can invoke it without using 'python' command
 # or so that the script can locate it's position
-GAM=`which --skip-alias gam.py 2>/dev/null`
+GAM=`which --skip-alias gam 2>/dev/null`
 
 WEBDAV_INFO=~/.gginfo
 
