@@ -9,13 +9,16 @@
 
 # populate WEBDAVHOST with the your Confluence instance URI
 WEBDAVHOST="https://<webdavserver.com>/wiki/plugins/servlet/confluence/default"
-  
+
 # PAGENAME defines the name of the page you want to update with the script
 # it's best to create an empty page before the first execution of the script
 PAGENAME="Available Google Groups - Mailing Lists" # youc
-  
+
 # PAGEPATH defines the relative path to PAGENAME in your Confluence instance
 PAGEPATH="path/to/the/page/$PAGENAME"
-  
+
 # FILENAME is the actual 'object' that is uploaded via webdave to your Confluence instance
 FILENAME="$PAGENAME.txt"
+
+ATLASSIAN_USER="user@domain.com"
+ATLASSIAN_PASSWORD="password"
