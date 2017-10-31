@@ -29,10 +29,6 @@
 # https://github.com/jay0lee/GAM
 # You need to plage the gam script in a common path i.e. /usr/bin
 #
-# The 'cadaver' tool and 'python v2.5+' need to be installed in order for the script to work.
-# 'cadaver' needs a .netrc file with WebDav's authentication information
-# to be placed on the user's homefolder
-#
 # ggroups2confluence requires a .gginfo file to be placed in path reachable by the user
 # that will execcute the script i.e. the homefolder, and its path need to defined
 # in the ggroups2confluence script (~/.gginfo by default)
@@ -41,11 +37,11 @@
 
 DATE=`date`
 #PYTHON=`which python 2>/dev/null` # Python 2.5+ is required
-CADAVER=`which cadaver 2>/dev/null`
 # manually define the path to the gam script, or link the gam in a common PATH like /usr/bin
 # set 755 permissions to the gam script (so that you can invoke it without using 'python' command
 # or so that the script can locate it's position
 GAM=`which --skip-alias gam 2>/dev/null`
+CURL=`which --skip-alias curl 2>/dev/null`
 
 WEBDAV_INFO=~/.gginfo
 
@@ -70,8 +66,8 @@ LIST_OF_GROUPS=/tmp/.raw_groups_info # must be a plain text list of Google Group
 OUTPUT=/tmp/$FILENAME # we will generate the txt/html file that will be uploaded to the webdav server that will be named as the webdav page
 
 # Check to see if the 'cadaver' command is available.
-if [ ! -f "${CADAVER}" ]; then
-	echo "$0 - ERROR: The 'cadaver' command does not appear to be installed."
+if [ ! -f "${CURL}" ]; then
+	echo "$0 - ERROR: The 'curl' command does not appear to be installed."
 	exit
 fi
 # Check to see if the 'gam' command is available.
@@ -166,7 +162,7 @@ EOF
 
 	# remove the tmp files
 	rm "${OUTPUT}"
-        rm "$LIST_OF_GROUPS"
+  rm "$LIST_OF_GROUPS"
 else
 	echo "$0 - ERROR: Unable to find the file \'${OUTPUT}\'"
 fi
