@@ -8,6 +8,8 @@
 #
 IGNORE_GAM=false
 DEBUG=false
+#SAMPLE_PAGE="sample_page.txt"
+
 CONFLUENCE_URL="<your_jnstance>.atlassian.net"
 ATLASSIAN_USER="user@domain.com"
 ATLASSIAN_PASSWORD="password"
