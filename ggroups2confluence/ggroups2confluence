@@ -181,7 +181,7 @@ function _get_latest_version_of_page(){
 }
 
 function _upload_content(){
-  STORAGE=`tr -d '\n' < "$OUTPUT" | sed  's/\'/\\'/g;s/\"/\\"/g;s/\?/\\?/g;s/\//\\//g'`
+  STORAGE=`tr -d '\n' < "$OUTPUT" | sed 's/\"/\\\"/g'`
   CURRENT_VERSION=$(_get_latest_version_of_page)
   NEW_VERSION=$(($CURRENT_VERSION+1))
   curl --silent \
