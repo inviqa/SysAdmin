@@ -1,0 +1,47 @@
+
+<p>this is a sample page for testing and dubugging purposes</p>
+<p>last update on <strong><i>Thu Jan 1 00:00:01 UTC 2017</i></strong></p>
+<br/>
+<strong>Name</strong> - <a href="mailto:Email">Email</a>
+<ul>
+<li>alias: <a href="mailto:Aliases">Aliases</a></li>
+<li>alias: <a href="mailto:NonEditableAliases">NonEditableAliases</a></li>
+</ul>
+
+<ul>
+</ul>
+
+<br/>
+<strong>2020-accounts</strong> - <a href="mailto:2020-accounts@inviqa.com">2020-accounts@inviqa.com</a>
+<ul>
+<li>member: astokes@inviqa.com</li>
+<li>member: Kirsty.Kearns@inviqa.com</li>
+</ul>
+
+<br/>
+<strong>ASL Internal</strong> - <a href="mailto:asl-internal@inviqa.com">asl-internal@inviqa.com</a>
+<ul>
+<li>member: cblando@inviqa.com</li>
+<li>member: lliebmann@inviqa.com</li>
+<li>member: rene.flachsenberger@inviqa.com</li>
+</ul>
+
+<br/>
+<strong>astrid-miyu-accounts</strong> - <a href="mailto:astrid-miyu-accounts@inviqa.com">astrid-miyu-accounts@inviqa.com</a>
+<ul>
+<li>owner: dmurdoch@inviqa.com</li>
+<li>member: dfeenan@inviqa.com</li>
+<li>member: fholder@inviqa.com</li>
+</ul>
+
+<br/>
+<strong>Astrid & Miyu Internal</strong> - <a href="mailto:astrid-miyu-internal@inviqa.com">astrid-miyu-internal@inviqa.com</a>
+<ul>
+<li>alias: <a href="mailto:astridandmiyu-internal@inviqa.com">astridandmiyu-internal@inviqa.com</a></li>
+<li>alias: <a href="mailto:astridandmiyu-internal@sessiondigital.com">astridandmiyu-internal@sessiondigital.com</a></li>
+<li>alias: <a href="mailto:astrid-miyu-external@inviqa.com">astrid-miyu-external@inviqa.com</a></li>
+<li>alias: <a href="mailto:astridandmiyu-exterrnal@inviqa.com">astridandmiyu-exterrnal@inviqa.com</a></li>
+<li>alias: <a href="mailto:astridandmiyu-exterrnal@sessiondigital.com">astridandmiyu-exterrnal@sessiondigital.com</a></li>
+</ul>
+
+<p>last update on <strong><i>Thu Jan 1 00:00:01 UTC 2017</i></strong></p>

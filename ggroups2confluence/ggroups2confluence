@@ -76,6 +76,7 @@ else
   echo "PAGEID  # The Unique of the page to update"
   echo "DEBUG  # 'true' or 'false'"
   echo "IGNORE_GAM  # 'true' or 'false' to prevent the run of GAM for debug purposes"
+  echo "SAMPLE_PAGE  # url to a sample page to be used in conjunction with DEBUG"
 	exit 1
 fi
 
@@ -181,7 +182,11 @@ function _get_latest_version_of_page(){
 }
 
 function _upload_content(){
-  STORAGE=`tr -d '\n' < "$OUTPUT" | sed 's/\"/\\\"/g'`
+  if [ ${DEBUG} == true ] && [ ! -z "${SAMPLE_PAGE+x}" ];then
+    STORAGE=`tr -d '\n' < "$SAMPLE_PAGE" | sed 's/\"/\\\"/g;s/\&/\&amp\;/g;'`
+  else
+    STORAGE=`tr -d '\n' < "$OUTPUT" | sed 's/\"/\\\"/g;s/\&/\&amp\;/g;'`
+  fi
   CURRENT_VERSION=$(_get_latest_version_of_page)
   NEW_VERSION=$(($CURRENT_VERSION+1))
   curl --silent \
@@ -204,8 +209,7 @@ function _upload_content(){
           \"number\": ${NEW_VERSION}
         }
       }" \
-    --url "$CONFLUENCE_URL/wiki/rest/api/content/${PAGEID}" 2>&1
-    #>> /dev/null
+    --url "$CONFLUENCE_URL/wiki/rest/api/content/${PAGEID}" 2>&1 >> /dev/null
 }
 
 _create_groups_list
