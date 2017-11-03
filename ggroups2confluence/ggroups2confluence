@@ -54,6 +54,7 @@ esac
 GAM=`which $SKIP_ALIAS gam 2>/dev/null`
 CURL=`which $SKIP_ALIAS curl 2>/dev/null`
 SED=`which $SKIP_ALIAS curl 2>/dev/null`
+TR=`which $SKIP_ALIAS curl 2>/dev/null`
 CURL=`which $SKIP_ALIAS curl 2>/dev/null`
 
 WEBDAV_INFO=~/.gginfo
@@ -84,15 +85,25 @@ if [ -z "${CONFLUENCE_URL+x}" ]; then echo "CONFLUENCE_URL is unset"; fi
 if [ -z "${ATLASSIAN_USER+x}" ]; then echo "ATLASSIAN_USER is unset"; fi
 if [ -z "${ATLASSIAN_PASSWORD+x}" ]; then echo "ATLASSIAN_PASSWOR is unset"; fi
 if [ -z "${PAGENAME+x}" ]; then echo "PAGENAME is unset"; fi
-if [ -z "${PAGENAME+x}" ]; then echo "PAGEID is unset # get the id from the 'Page Infoormation' in confluence"; fi
+if [ -z "${PAGEID+x}" ]; then echo "PAGEID is unset # get the id from the 'Page Infoormation' in confluence"; fi
 
 FILENAME="$PAGENAME.txt"
 LIST_OF_GROUPS=/tmp/.raw_groups_info # must be a plain text list of Google Groups in the form group@doma.OUTPUT=$FILENAME$1 # the second paramenter must be the name of a file where the script will dump the output
 OUTPUT=/tmp/$FILENAME # we will generate the txt/html file that will be uploaded to the webdav server that will be named as the webdav page
 
-# Check to see if the 'cadaver' command is available.
+# Check to see if the 'curl' command is available.
 if [ ! -f "${CURL}" ]; then
 	echo "$0 - ERROR: The 'curl' command does not appear to be installed."
+	exit 1
+fi
+# Check to see if the 'sed' command is available.
+if [ ! -f "${SED}" ]; then
+	echo "$0 - ERROR: The 'sed' command does not appear to be installed."
+	exit 1
+fi
+# Check to see if the 'tr' command is available.
+if [ ! -f "${TR}" ]; then
+	echo "$0 - ERROR: The 'tr' command does not appear to be installed."
 	exit 1
 fi
 # Check to see if the 'gam' command is available.
