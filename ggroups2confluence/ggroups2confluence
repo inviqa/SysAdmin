@@ -90,7 +90,7 @@ if [ -z "${PAGEID+x}" ]; then echo "PAGEID is unset # get the id from the 'Page 
 FILENAME="$PAGENAME.txt"
 LIST_OF_GROUPS=/tmp/.raw_groups_info # must be a plain text list of Google Groups in the form group@doma.OUTPUT=$FILENAME$1 # the second paramenter must be the name of a file where the script will dump the output
 OUTPUT=/tmp/$FILENAME # we will generate the txt/html file that will be uploaded to the webdav server that will be named as the webdav page
-
+DATA_FILE=/tmp/parsed_$FILENAME
 # Check to see if the 'curl' command is available.
 if [ ! -f "${CURL}" ]; then
 	echo "$0 - ERROR: The 'curl' command does not appear to be installed."
@@ -124,10 +124,10 @@ function _create_groups_list(){
     # checks that the list of groups file has been properly created
     [ ! -f $LIST_OF_GROUPS ] && { echo "$LIST_OF_GROUPS file not found"; exit 99; }
     # remove the header (first line) from the CSV file
-    # sed '1d' $LIST_OF_GROUPS > $LIST_OF_GROUPS.tmp
+    sed '1d' $LIST_OF_GROUPS > $LIST_OF_GROUPS.tmp
     # remove all the lines before the colum descriptor dn the colum descriptor itself
     # sed -e "1,/$COLUMN_DESCRIPTOR/d"  $LIST_OF_GROUPS > $LIST_OF_GROUPS.tmp
-    # mv $LIST_OF_GROUPS.tmp $LIST_OF_GROUPS
+     mv $LIST_OF_GROUPS.tmp $LIST_OF_GROUPS
   fi
 }
 
@@ -161,10 +161,11 @@ function _get_groups_info(){
 }
 
 function _print_file(){
+  CURRENT_VERSION=$(_get_latest_version_of_page)
+  NEW_VERSION=$(($CURRENT_VERSION+1))
   OLDIFS=$IFS
   IFS=,
   # start populating the 'page' with generic information
-  echo "" > $OUTPUT # clear the 'page'
   echo "<p>The following mailing lists are available for staff use.</p>" >> $OUTPUT
   # Manifesto - to be set in an external file to include/cat or to be set in a variable in the gginfo file
   echo "<p>The people listed as 'owner' for a specific Google Group (mailing-list) have the ability to add and remove other members from their Google Groups administration panel with the need to fall back the request to the Support Team.</p>" >> $OUTPUT
@@ -181,6 +182,19 @@ function _print_file(){
 
   echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
   # close the popluation of the 'page'
+
+  #echo "{\"body\":{\"storage\":{\"value\":\"" > "$DATA_FILE" # clear the 'page'
+  echo '{"body":{"storage":{"value":"' > "$DATA_FILE" # clear the 'page'
+  if [ ${DEBUG} == true ] && [ ! -z "${SAMPLE_PAGE+x}" ];then
+    tr -d '\n' < "$SAMPLE_PAGE" | sed 's/\"/\\\"/g;s/\&/\&amp\;/g;' >> "$DATA_FILE"
+    #tr -d '\n' < "$SAMPLE_PAGE" | sed 's/\&/\&amp\;/g;' > $DATA_FILE
+  else
+    tr -d '\n' < "$OUTPUT" | sed 's/\"/\\\"/g;s/\&/\&amp\;/g;' >> "$DATA_FILE"
+    #tr -d '\n' < "$OUTPUT" | sed 's/\&/\&amp\;/g;' > $DATA_FILE
+  fi
+
+  echo '","representation":"storage"}},"status":"current","title":"'${PAGENAME}'","type":"page","version":{"number":${NEW_VERSION}}}' >> "$DATA_FILE"
+  #echo "\",\"representation\":\"storage\"}},\"status\":\"current\",\"title\":\"${PAGENAME}\",\"type\":\"page\",\"version\":{\"number\":${NEW_VERSION}}}" >> "$DATA_FILE"
   IFS=$OLDIFS
 }
 function _get_latest_version_of_page(){
@@ -193,34 +207,14 @@ function _get_latest_version_of_page(){
 }
 
 function _upload_content(){
-  if [ ${DEBUG} == true ] && [ ! -z "${SAMPLE_PAGE+x}" ];then
-    STORAGE=`tr -d '\n' < "$SAMPLE_PAGE" | sed 's/\"/\\\"/g;s/\&/\&amp\;/g;'`
-  else
-    STORAGE=`tr -d '\n' < "$OUTPUT" | sed 's/\"/\\\"/g;s/\&/\&amp\;/g;'`
-  fi
-  CURRENT_VERSION=$(_get_latest_version_of_page)
-  NEW_VERSION=$(($CURRENT_VERSION+1))
   curl --silent \
     --request PUT \
     --user $ATLASSIAN_USER:"$ATLASSIAN_PASSWORD" \
     --header 'Accept: application/json' \
     --header 'Content-Type: application/json' \
-    --data "
-      {
-        \"body\": {
-          \"storage\": {
-              \"value\": \"${STORAGE}\",
-              \"representation\": \"storage\"
-              }
-        },
-        \"status\": \"current\",
-        \"title\": \"${PAGENAME}\",
-        \"type\": \"page\",
-        \"version\": {
-          \"number\": ${NEW_VERSION}
-        }
-      }" \
-    --url "$CONFLUENCE_URL/wiki/rest/api/content/${PAGEID}" 2>&1 >> /dev/null
+    --data @"$DATA_FILE" \
+    --url "$CONFLUENCE_URL/wiki/rest/api/content/${PAGEID}" 2>&1
+    #>> /dev/null
 }
 
 _create_groups_list
