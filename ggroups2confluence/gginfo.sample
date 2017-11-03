@@ -10,12 +10,12 @@ IGNORE_GAM=false
 DEBUG=false
 #SAMPLE_PAGE="sample_page.txt"
 
-CONFLUENCE_URL="<your_jnstance>.atlassian.net"
+CONFLUENCE_URL="https://<your_jnstance>.atlassian.net"
 ATLASSIAN_USER="user@domain.com"
 ATLASSIAN_PASSWORD="password"
 
 # PAGENAME defines the name of the page you want to update with the script
 # it's best to create an empty page before the first execution of the script
 PAGENAME="Page Name"
-# get the id from the 'Page Infoormation' in confluence"
+# get the PAGEID from the 'Page Infoormation' in confluence"
 PAGEID="" # 1234567
