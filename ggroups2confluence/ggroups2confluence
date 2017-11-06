@@ -29,144 +29,204 @@
 # https://github.com/jay0lee/GAM
 # You need to plage the gam script in a common path i.e. /usr/bin
 #
-# The 'cadaver' tool and 'python v2.5+' need to be installed in order for the script to work.
-# 'cadaver' needs a .netrc file with WebDav's authentication information
-# to be placed on the user's homefolder
-#
 # ggroups2confluence requires a .gginfo file to be placed in path reachable by the user
 # that will execcute the script i.e. the homefolder, and its path need to defined
 # in the ggroups2confluence script (~/.gginfo by default)
 #
 ###############################################################################
 
-DATE=`date`
 #PYTHON=`which python 2>/dev/null` # Python 2.5+ is required
-CADAVER=`which cadaver 2>/dev/null`
 # manually define the path to the gam script, or link the gam in a common PATH like /usr/bin
 # set 755 permissions to the gam script (so that you can invoke it without using 'python' command
 # or so that the script can locate it's position
-GAM=`which --skip-alias gam 2>/dev/null`
+SKIP_ALIAS=""
+IGNORE_GAM=false
+DEBUG=false
+case "$OSTYPE" in
+  solaris*) set SKIP_ALIAS "" ;;
+  darwin*)  set SKIP_ALIAS "" ;;
+  linux*)   set SKIP_ALIAS "--skip-alias" ;;
+  bsd*)     set SKIP_ALIAS "" ;;
+  msys*)    set SKIP_ALIAS "" ;;
+  *)        set SKIP_ALIAS "" ;;
+esac
+GAM=`which $SKIP_ALIAS gam 2>/dev/null`
+CURL=`which $SKIP_ALIAS curl 2>/dev/null`
+SED=`which $SKIP_ALIAS curl 2>/dev/null`
+TR=`which $SKIP_ALIAS curl 2>/dev/null`
+CURL=`which $SKIP_ALIAS curl 2>/dev/null`
 
-WEBDAV_INFO=~/.gginfo
+GG_INFO=~/.gginfo
 
-
-if [ -f $WEBDAV_INFO ]; then
-  source $WEBDAV_INFO
-# '.webdav_info' must contain the following information
-# WEBDAVHOST="https://xxx.webdavserver.com/wiki/plugins/servlet/confluence/default"
-# PAGENAME="name_of_the_page"
-# PAGEPATH="_pat_to_the_page_/$PAGENAME"
-# FILENAME="$PAGENAME.txt"
-# in webdav the page shows the content of a txt/html file that has the same name as the page
+if [ -f $GG_INFO ]; then
+  source $GG_INFO
 else
-  WEBDAVHOST="" #"https://xxx.webdavserver.com/wiki/plugins/servlet/confluence/default"
-  PAGENAME="name_of_the_page"
-  PAGEPATH="_pat_to_the_page_/$PAGENAME"
-  FILENAME="$PAGENAME.txt"
+  echo "$0 - ERROR: The '$GG_INFO' file not found."
+  echo "The following must be defined in $GG_INFO :"
+  echo "CONFLUENCE_URL  # The URL to access your Confluence instance"
+  echo "ATLASSIAN_USER  # The username to access your Confluence instance"
+  echo "ATLASSIAN_PASSWORD  # The password to access your Confluence instance"
+  echo "PAGENAME  # The name of the page to update"
+  echo "PAGEID  # The Unique of the page to update"
+  echo "DEBUG  # 'true' or 'false'"
+  echo "IGNORE_GAM  # 'true' or 'false' to prevent the run of GAM for debug purposes"
+  echo "SAMPLE_PAGE  # url to a sample page to be used in conjunction with DEBUG"
+	exit 1
 fi
 
-LIST_OF_GROUPS=/tmp/.raw_groups_info # must be a plain text list of Google Groups in the form group@doma.OUTPUT=$FILENAME$1 # the second paramenter must be the name of a file where the script will dump the output
+if [ -z "${CONFLUENCE_URL+x}" ]; then echo "CONFLUENCE_URL is unset"; fi
+if [ -z "${ATLASSIAN_USER+x}" ]; then echo "ATLASSIAN_USER is unset"; fi
+if [ -z "${ATLASSIAN_PASSWORD+x}" ]; then echo "ATLASSIAN_PASSWOR is unset"; fi
+if [ -z "${PAGENAME+x}" ]; then echo "PAGENAME is unset"; fi
+if [ -z "${PAGEID+x}" ]; then echo "PAGEID is unset # get the id from the 'Page Infoormation' in confluence"; fi
 
-OUTPUT=/tmp/$FILENAME # we will generate the txt/html file that will be uploaded to the webdav server that will be named as the webdav page
-
-# Check to see if the 'cadaver' command is available.
-if [ ! -f "${CADAVER}" ]; then
-	echo "$0 - ERROR: The 'cadaver' command does not appear to be installed."
-	exit
+FILENAME="$PAGENAME"
+LIST_OF_GROUPS=/tmp/gg_raw_groups_info # must be a plain text list of Google Groups in the form group@doma.OUTPUT=$FILENAME$1 # the second paramenter must be the name of a file where the script will dump the output
+OUTPUT=/tmp/gg_$FILENAME.txt # we will generate the txt/html file that will be uploaded to the webdav server that will be named as the webdav page
+DATA_FILE=/tmp/gg_$FILENAME.json
+# Check to see if the 'curl' command is available.
+if [ ! -f "${CURL}" ]; then
+	echo "$0 - ERROR: The 'curl' command does not appear to be installed."
+	exit 1
+fi
+# Check to see if the 'sed' command is available.
+if [ ! -f "${SED}" ]; then
+	echo "$0 - ERROR: The 'sed' command does not appear to be installed."
+	exit 1
+fi
+# Check to see if the 'tr' command is available.
+if [ ! -f "${TR}" ]; then
+	echo "$0 - ERROR: The 'tr' command does not appear to be installed."
+	exit 1
 fi
 # Check to see if the 'gam' command is available.
-if [ ! -f "${GAM}" ]; then
+if [ ! -f "${GAM}" ] && [ ${IGNORE_GAM} == false ]; then
 	echo "$0 - ERROR: The 'gam' command does not appear to be installed."
-	exit
+	exit 1
 fi
 
-# Fetch of the list of available groups
-#eval $GAM print groups name description members owners > $LIST_OF_GROUPS
+function _create_groups_list(){
+  if [ ${IGNORE_GAM} == false ]; then
+    ## fetch the list of the active groups and aliases
+    #eval gam print groups name description members owners > $LIST_OF_GROUPS
+    eval gam print groups name aliases > $LIST_OF_GROUPS 2>/dev/null
+    # according to the parameter passed to GAM the column descriptor may change
+    # we will use column descriptor as a patter to indentify the point from which is the groups are listed in the List of Groups file, in fact if we ask to show the aliases the aliases will ALSO printed before the list of groups but this is a duplicate information that we don't need
+    COLUMN_DESCRIPTOR="Email,Name"
+    # parse the list of groups
+    # checks that the list of groups file has been properly created
+    [ ! -f $LIST_OF_GROUPS ] && { echo "$LIST_OF_GROUPS file not found"; exit 99; }
+    # remove the header (first line) from the CSV file
+    sed '1d' $LIST_OF_GROUPS > $LIST_OF_GROUPS.tmp
+    # remove all the lines before the colum descriptor dn the colum descriptor itself
+    # sed -e "1,/$COLUMN_DESCRIPTOR/d"  $LIST_OF_GROUPS > $LIST_OF_GROUPS.tmp
+     mv $LIST_OF_GROUPS.tmp $LIST_OF_GROUPS
+  fi
+}
 
-## fetch the list of the active groups and aliases
-eval $GAM print groups name aliases > $LIST_OF_GROUPS 2>/dev/null
+function _get_groups_info(){
+  # takes in input the LIST_OF_GROUPS (which is a CSV list)
+  while read groupname name aliases
+  do
+    # prints the head of the section describing a group
+    echo "<br/>"$'\n'"<strong>$name</strong> - <a href=\"mailto:$groupname\">$groupname</a>" >> $OUTPUT
+    # start printing the list of aliases if any
+    # checks that the LIST_OF_ALIASES is NOT an empty list or contains only spaces
+    if [ ! -z "$aliases" -a "$aliases"!=" " ]; then
+      # transform the aliases list replacing the spaces with commas, because the IFS is set to ','
+      aliases=${aliases// /,}
+      # this list must be transformed in a array
+      read -a LIST_OF_ALIASES <<< "$aliases"
+      echo '<ul>' >> $OUTPUT
+      for alias in "${LIST_OF_ALIASES[@]}"
+      do
+        echo "<li>alias: <a href=\"mailto:$alias\">$alias</a></li>" >> $OUTPUT
+      done
+      echo "</ul>"$'\n' >> $OUTPUT
+    fi
+    # start printing the list of owners and members
+    echo '<ul>' >> $OUTPUT
+    # echo "<a href=\"mailto:$groupname\">$groupname</a>" >> $OUTPUT
+    eval gam info group $groupname | grep "owner:" | cut -f2,3 -d" " | sed -e 's/^/<li>/g;s/$/<\/li>/g' >> $OUTPUT
+    eval gam info group $groupname | grep "member:" | cut -f2,3 -d" " | sed -e 's/^/<li>/g;s/$/<\/li>/g' >> $OUTPUT
+    echo "</ul>"$'\n' >> $OUTPUT
+  done < $LIST_OF_GROUPS
+}
 
-# according to the parameter passed to GAM the column descriptor may change
-# we will use column descriptor as a patter to indentify the point from which is the groups are listed in the List of Groups file, in fact if we ask to show the aliases the aliases will ALSO printed before the list of groups but this is a duplicate information that we don't need
-COLUMN_DESCRIPTOR="Email,Name"
+function _print_file(){
+  DATE=`date`
+  CURRENT_VERSION=$(_get_latest_version_of_page)
+  NEW_VERSION=$(($CURRENT_VERSION+1))
+  OLDIFS=$IFS
+  IFS=,
+  # start populating the 'page' with generic information
+  echo "<p>The following mailing lists are available for staff use.</p>" > $OUTPUT
+  # Manifesto - to be set in an external file to include/cat or to be set in a variable in the gginfo file
+  echo "<p>The people listed as 'owner' for a specific Google Group (mailing-list) have the ability to add and remove other members from their Google Groups administration panel with the need to fall back the request to the Support Team.</p>" >> $OUTPUT
+  echo "<p><strong>We encourage whoever has the need to be added or removed to/from a mailing-list to check first who's the owner of it and direct the request to her/him</strong> before defaulting to the Support Team, that will give us a bit of breath on the over all quantity of tasks we perform.</p>" >> $OUTPUT
+  echo "<p>/In case a group doesn't have a owner we will be happy to assign one or more (but it's not mandatory).</p>" >> $OUTPUT
+  echo "<p>it's possible to review the Groups you are member of, at this link<br /><a href=\"https://groups.google.com/a/inviqa.com/forum/?hl=en&amp;fromgroups#!myforums\">https://groups.google.com/a/inviqa.com/forum/?hl=en&amp;fromgroups#!myforums</a></p>" >> $OUTPUT
+  echo "<p><strong>If you are owner of a group you can even add/remove new members and review the access/security settings of the group</strong></p>" >> $OUTPUT
+  # End of Manifesto
+  echo "<p>This list is generated using the script $0 on the host `hostname`</p>" >> $OUTPUT
+  echo "<div><strong>If this page is not showing any list most probably the issue is with outdated Time Settings of the `hostname` therefore the Google servers refuse the OAUTH2 connection.'.</strong></div>" >> $OUTPUT
 
+  echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
+  if [ ${IGNORE_GAM} == false ]; then  _get_groups_info; fi
+  echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
+  # close the popluation of the 'page'
 
-# parse the list of groups
-OLDIFS=$IFS
-IFS=,
-# checks that the list of groups file has been properlu created
-[ ! -f $LIST_OF_GROUPS ] && { echo "$LIST_OF_GROUPS file not found"; exit 99; }
+  #echo "{\"body\":{\"storage\":{\"value\":\"" > "$DATA_FILE" # clear the 'page'
+  echo '{"body":{"storage":{"value":"' > "$DATA_FILE" # clear the 'page'
 
-# remove the header (first line) from the CSV file
-# sed '1d' $LIST_OF_GROUPS > $LIST_OF_GROUPS.tmp
+  if [ ${DEBUG} == true ] && [ ! -z "${SAMPLE_PAGE+x}" ];then
+    tr -d '\n' < "$SAMPLE_PAGE" | sed 's/\"/\\\"/g;s/\&/\&amp\;/g;' >> "$DATA_FILE"
+    #tr -d '\n' < "$SAMPLE_PAGE" | sed 's/\&/\&amp\;/g;' > $DATA_FILE
+  else
+    tr -d '\n' < "$OUTPUT" | sed 's/\"/\\\"/g;s/\&/\&amp\;/g;' >> "$DATA_FILE"
+    #tr -d '\n' < "$OUTPUT" | sed 's/\&/\&amp\;/g;' > $DATA_FILE
+  fi
 
-# remove all the lines before the colum descriptor dn the colum descriptor itself
- #sed -e "1,/$COLUMN_DESCRIPTOR/d"  $LIST_OF_GROUPS > $LIST_OF_GROUPS.tmp
-#mv $LIST_OF_GROUPS.tmp $LIST_OF_GROUPS
+  echo '","representation":"storage"}},
+  "status":"current",
+  "title":"'${PAGENAME}'",
+  "type":"page",
+  "version":{"number":'${NEW_VERSION}'}}' >> "$DATA_FILE"
+  #echo "\",\"representation\":\"storage\"}},\"status\":\"current\",\"title\":\"${PAGENAME}\",\"type\":\"page\",\"version\":{\"number\":${NEW_VERSION}}}" >> "$DATA_FILE"
+  IFS=$OLDIFS
+}
+function _get_latest_version_of_page(){
+  local LATEST_VERSION=`curl --silent\
+    --user $ATLASSIAN_USER:"$ATLASSIAN_PASSWORD" \
+    --header 'Accept: application/json' \
+    --url "$CONFLUENCE_URL/wiki/rest/api/content/${PAGEID}?expand=version" \
+    | sed -e 's/.*"number":\(.*\)/\1/'|cut -f1 -d"," `
+  echo $LATEST_VERSION
+}
 
-# start populating the 'page' with generic information
-echo "" > $OUTPUT # clear the 'page'
-echo "<p>The following mailing lists are available for staff use.</p>" >> $OUTPUT
-# Manifesto - to be set in an external file to include/cat or to be set in a variable in the gginfo file
-echo "<p>The people listed as 'owner' for a specific Google Group (mailing-list) have the ability to add and remove other members from their Google Groups administration panel with the need to fall back the request to the Support Team.</p>" >> $OUTPUT
-echo "<p><strong>We encourage whoever has the need to be added or removed to/from a mailing-list to check first who's the owner of it and direct the request to her/him</strong> before defaulting to the Support Team, that will give us a bit of breath on the over all quantity of tasks we perform.</p>" >> $OUTPUT
-echo "<p>/In case a group doesn't have a owner we will be happy to assign one or more (but it's not mandatory).</p>" >> $OUTPUT
-echo "<p>it's possible to review the Groups you are member of, at this link<br /><a href=\"https://groups.google.com/a/inviqa.com/forum/?hl=en&amp;fromgroups#!myforums\">https://groups.google.com/a/inviqa.com/forum/?hl=en&amp;fromgroups#!myforums</a></p>" >> $OUTPUT
-echo "<p><strong>If you are owner of a group you can even add/remove new members and review the access/security settings of the group</strong></p>" >> $OUTPUT
-# End of Manifesto
-echo "<p>This list is generated using the script $0 on the host `hostname`</p>" >> $OUTPUT
-echo "<div><strong>If this page is not showing any list most probably the issue is with outdated Time Settings of the `hostname` therefore the Google servers refuse the OAUTH2 connection.'.</strong></div>" >> $OUTPUT
-echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
+function _upload_content(){
+  curl --silent \
+    --request PUT \
+    --user $ATLASSIAN_USER:"$ATLASSIAN_PASSWORD" \
+    --header 'Accept: application/json' \
+    --header 'Content-Type: application/json' \
+    --data @"$DATA_FILE" \
+    --url "$CONFLUENCE_URL/wiki/rest/api/content/${PAGEID}" 2>&1 >> /dev/null
+}
 
-# takes in input the LIST_OF_GROUPS (which is a CSV list)
-while read groupname name aliases
-do
-        # prints the head of the section describing a group
-        echo "<br/>"$'\n'"<strong>$name</strong> - <a href=\"mailto:$groupname\">$groupname</a>" >> $OUTPUT
-
-        # start printing the list of aliases if any
-        # checks that the LIST_OF_ALIASES is NOT an empty list or contains only spaces
-        if [ ! -z "$aliases" -a "$aliases"!=" " ]; then
-          # transform the aliases list replacing the spaces with commas, because the IFS is set to ','
-          aliases=${aliases// /,}
-
-          # this list must be transformed in a array
-          read -a LIST_OF_ALIASES <<< "$aliases"
-
-          echo '<ul>' >> $OUTPUT
-
-          for alias in "${LIST_OF_ALIASES[@]}"
-          do
-            echo "<li>alias: <a href=\"mailto:$alias\">$alias</a></li>" >> $OUTPUT
-	  done
-          echo "</ul>"$'\n' >> $OUTPUT
-        fi
-        # start printing the list of owners and members
-        echo '<ul>' >> $OUTPUT
-	# echo "<a href=\"mailto:$groupname\">$groupname</a>" >> $OUTPUT
-	eval $GAM info group $groupname | grep "owner:" | cut -f2,3 -d" " | sed -e 's/^/<li>/g;s/$/<\/li>/g' >> $OUTPUT
-	eval $GAM info group $groupname | grep "member:" | cut -f2,3 -d" " | sed -e 's/^/<li>/g;s/$/<\/li>/g' >> $OUTPUT
-	echo "</ul>"$'\n' >> $OUTPUT
-
-done < $LIST_OF_GROUPS
-echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
-
-# close the popluation of the 'page'
-IFS=$OLDIFS
-
+_create_groups_list
+_print_file
 
 if [ -f "${OUTPUT}" ]; then
-
-	# Run the 'cadaver' command, upload files from the tmp file
-	${CADAVER} >/dev/null << EOF
-        open $WEBDAVHOST
-        cd "$PAGEPATH"
-        put "$OUTPUT"
-EOF
-
+  _upload_content
 	# remove the tmp files
-	rm "${OUTPUT}"
-        rm "$LIST_OF_GROUPS"
 else
 	echo "$0 - ERROR: Unable to find the file \'${OUTPUT}\'"
+  exit 1
+fi
+
+if [ ${DEBUG} == false ]; then
+  rm "$OUTPUT"
+  rm "$DATA_FILE"
+  rm "$LIST_OF_GROUPS"
 fi
