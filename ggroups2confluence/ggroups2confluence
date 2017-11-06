@@ -35,7 +35,6 @@
 #
 ###############################################################################
 
-DATE=`date`
 #PYTHON=`which python 2>/dev/null` # Python 2.5+ is required
 # manually define the path to the gam script, or link the gam in a common PATH like /usr/bin
 # set 755 permissions to the gam script (so that you can invoke it without using 'python' command
@@ -57,19 +56,13 @@ SED=`which $SKIP_ALIAS curl 2>/dev/null`
 TR=`which $SKIP_ALIAS curl 2>/dev/null`
 CURL=`which $SKIP_ALIAS curl 2>/dev/null`
 
-WEBDAV_INFO=~/.gginfo
+GG_INFO=~/.gginfo
 
-if [ -f $WEBDAV_INFO ]; then
-  source $WEBDAV_INFO
-# '.webdav_info' must contain the following information
-# WEBDAVHOST="https://xxx.webdavserver.com/wiki/plugins/servlet/confluence/default"
-# PAGENAME="name_of_the_page"
-# PAGEPATH="_pat_to_the_page_/$PAGENAME"
-# FILENAME="$PAGENAME.txt"
-# in webdav the page shows the content of a txt/html file that has the same name as the page
+if [ -f $GG_INFO ]; then
+  source $GG_INFO
 else
-  echo "$0 - ERROR: The '$WEBDAV_INFO' file not found."
-  echo "The following must be defined in $WEBDAV_INFO :"
+  echo "$0 - ERROR: The '$GG_INFO' file not found."
+  echo "The following must be defined in $GG_INFO :"
   echo "CONFLUENCE_URL  # The URL to access your Confluence instance"
   echo "ATLASSIAN_USER  # The username to access your Confluence instance"
   echo "ATLASSIAN_PASSWORD  # The password to access your Confluence instance"
@@ -87,10 +80,10 @@ if [ -z "${ATLASSIAN_PASSWORD+x}" ]; then echo "ATLASSIAN_PASSWOR is unset"; fi
 if [ -z "${PAGENAME+x}" ]; then echo "PAGENAME is unset"; fi
 if [ -z "${PAGEID+x}" ]; then echo "PAGEID is unset # get the id from the 'Page Infoormation' in confluence"; fi
 
-FILENAME="$PAGENAME.txt"
-LIST_OF_GROUPS=/tmp/.raw_groups_info # must be a plain text list of Google Groups in the form group@doma.OUTPUT=$FILENAME$1 # the second paramenter must be the name of a file where the script will dump the output
-OUTPUT=/tmp/$FILENAME # we will generate the txt/html file that will be uploaded to the webdav server that will be named as the webdav page
-DATA_FILE=/tmp/parsed_$FILENAME
+FILENAME="$PAGENAME"
+LIST_OF_GROUPS=/tmp/gg_raw_groups_info # must be a plain text list of Google Groups in the form group@doma.OUTPUT=$FILENAME$1 # the second paramenter must be the name of a file where the script will dump the output
+OUTPUT=/tmp/gg_$FILENAME.txt # we will generate the txt/html file that will be uploaded to the webdav server that will be named as the webdav page
+DATA_FILE=/tmp/gg_$FILENAME.json
 # Check to see if the 'curl' command is available.
 if [ ! -f "${CURL}" ]; then
 	echo "$0 - ERROR: The 'curl' command does not appear to be installed."
@@ -161,12 +154,13 @@ function _get_groups_info(){
 }
 
 function _print_file(){
+  DATE=`date`
   CURRENT_VERSION=$(_get_latest_version_of_page)
   NEW_VERSION=$(($CURRENT_VERSION+1))
   OLDIFS=$IFS
   IFS=,
   # start populating the 'page' with generic information
-  echo "<p>The following mailing lists are available for staff use.</p>" >> $OUTPUT
+  echo "<p>The following mailing lists are available for staff use.</p>" > $OUTPUT
   # Manifesto - to be set in an external file to include/cat or to be set in a variable in the gginfo file
   echo "<p>The people listed as 'owner' for a specific Google Group (mailing-list) have the ability to add and remove other members from their Google Groups administration panel with the need to fall back the request to the Support Team.</p>" >> $OUTPUT
   echo "<p><strong>We encourage whoever has the need to be added or removed to/from a mailing-list to check first who's the owner of it and direct the request to her/him</strong> before defaulting to the Support Team, that will give us a bit of breath on the over all quantity of tasks we perform.</p>" >> $OUTPUT
@@ -176,15 +170,15 @@ function _print_file(){
   # End of Manifesto
   echo "<p>This list is generated using the script $0 on the host `hostname`</p>" >> $OUTPUT
   echo "<div><strong>If this page is not showing any list most probably the issue is with outdated Time Settings of the `hostname` therefore the Google servers refuse the OAUTH2 connection.'.</strong></div>" >> $OUTPUT
+
   echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
-
   if [ ${IGNORE_GAM} == false ]; then  _get_groups_info; fi
-
   echo "<p>last update on <strong><i>$DATE</i></strong></p>" >> $OUTPUT
   # close the popluation of the 'page'
 
   #echo "{\"body\":{\"storage\":{\"value\":\"" > "$DATA_FILE" # clear the 'page'
   echo '{"body":{"storage":{"value":"' > "$DATA_FILE" # clear the 'page'
+
   if [ ${DEBUG} == true ] && [ ! -z "${SAMPLE_PAGE+x}" ];then
     tr -d '\n' < "$SAMPLE_PAGE" | sed 's/\"/\\\"/g;s/\&/\&amp\;/g;' >> "$DATA_FILE"
     #tr -d '\n' < "$SAMPLE_PAGE" | sed 's/\&/\&amp\;/g;' > $DATA_FILE
@@ -193,7 +187,11 @@ function _print_file(){
     #tr -d '\n' < "$OUTPUT" | sed 's/\&/\&amp\;/g;' > $DATA_FILE
   fi
 
-  echo '","representation":"storage"}},"status":"current","title":"'${PAGENAME}'","type":"page","version":{"number":${NEW_VERSION}}}' >> "$DATA_FILE"
+  echo '","representation":"storage"}},
+  "status":"current",
+  "title":"'${PAGENAME}'",
+  "type":"page",
+  "version":{"number":'${NEW_VERSION}'}}' >> "$DATA_FILE"
   #echo "\",\"representation\":\"storage\"}},\"status\":\"current\",\"title\":\"${PAGENAME}\",\"type\":\"page\",\"version\":{\"number\":${NEW_VERSION}}}" >> "$DATA_FILE"
   IFS=$OLDIFS
 }
@@ -213,8 +211,7 @@ function _upload_content(){
     --header 'Accept: application/json' \
     --header 'Content-Type: application/json' \
     --data @"$DATA_FILE" \
-    --url "$CONFLUENCE_URL/wiki/rest/api/content/${PAGEID}" 2>&1
-    #>> /dev/null
+    --url "$CONFLUENCE_URL/wiki/rest/api/content/${PAGEID}" 2>&1 >> /dev/null
 }
 
 _create_groups_list
@@ -229,6 +226,7 @@ else
 fi
 
 if [ ${DEBUG} == false ]; then
-  rm "${OUTPUT}"
+  rm "$OUTPUT"
+  rm "$DATA_FILE"
   rm "$LIST_OF_GROUPS"
 fi
