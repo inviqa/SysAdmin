@@ -12,36 +12,36 @@
 </ul>
 
 <br/>
-<strong>2020-accounts</strong> - <a href="mailto:2020-accounts@inviqa.com">2020-accounts@inviqa.com</a>
+<strong>2020-accounts</strong> - <a href="mailto:xxxxxyyyy@inviqa.com">xxxxxyyyy@inviqa.com</a>
 <ul>
-<li>member: astokes@inviqa.com</li>
-<li>member: Kirsty.Kearns@inviqa.com</li>
+<li>member: xxxxxyyyy@inviqa.com</li>
+<li>member: xxxxxyyyy@inviqa.com</li>
 </ul>
 
 <br/>
-<strong>ASL Internal</strong> - <a href="mailto:asl-internal@inviqa.com">asl-internal@inviqa.com</a>
+<strong>ASL Internal</strong> - <a href="mailto:xxxxxyyyy@inviqa.com">xxxxxyyyy@inviqa.com</a>
 <ul>
-<li>member: cblando@inviqa.com</li>
-<li>member: lliebmann@inviqa.com</li>
-<li>member: rene.flachsenberger@inviqa.com</li>
+<li>member: xxxxxyyyy@inviqa.com</li>
+<li>member: xxxxxyyyy@inviqa.com</li>
+<li>member: xxxxxyyyy@inviqa.com</li>
 </ul>
 
 <br/>
-<strong>astrid-miyu-accounts</strong> - <a href="mailto:astrid-miyu-accounts@inviqa.com">astrid-miyu-accounts@inviqa.com</a>
+<strong>xxxxxyyyy-accounts</strong> - <a href="mailto:xxxxxyyyy@inviqa.com">xxxxxyyyy-accounts@inviqa.com</a>
 <ul>
-<li>owner: dmurdoch@inviqa.com</li>
-<li>member: dfeenan@inviqa.com</li>
-<li>member: fholder@inviqa.com</li>
+<li>owner: xxxxxyyyy@inviqa.com</li>
+<li>member: xxxxxyyyy@inviqa.com</li>
+<li>member: xxxxxyyyy@inviqa.com</li>
 </ul>
 
 <br/>
-<strong>Astrid & Miyu Internal</strong> - <a href="mailto:astrid-miyu-internal@inviqa.com">astrid-miyu-internal@inviqa.com</a>
+<strong>Astrid & Miyu Internal</strong> - <a href="mailto:xxxxxyyyy-internal@inviqa.com">xxxxxyyyy-internal@inviqa.com</a>
 <ul>
-<li>alias: <a href="mailto:astridandmiyu-internal@inviqa.com">astridandmiyu-internal@inviqa.com</a></li>
-<li>alias: <a href="mailto:astridandmiyu-internal@sessiondigital.com">astridandmiyu-internal@sessiondigital.com</a></li>
-<li>alias: <a href="mailto:astrid-miyu-external@inviqa.com">astrid-miyu-external@inviqa.com</a></li>
-<li>alias: <a href="mailto:astridandmiyu-exterrnal@inviqa.com">astridandmiyu-exterrnal@inviqa.com</a></li>
-<li>alias: <a href="mailto:astridandmiyu-exterrnal@sessiondigital.com">astridandmiyu-exterrnal@sessiondigital.com</a></li>
+<li>alias: <a href="mailto:xxxxxyyyy-internal@inviqa.com">xxxxxyyyy-internal@inviqa.com</a></li>
+<li>alias: <a href="mailto:xxxxxyyyy-internal@sessiondigital.com">xxxxxyyyy-internal@sessiondigital.com</a></li>
+<li>alias: <a href="mailto:xxxxxyyyy-external@inviqa.com">xxxxxyyyy-external@inviqa.com</a></li>
+<li>alias: <a href="mailto:xxxxxyyyy-exterrnal@inviqa.com">xxxxxyyyy-exterrnal@inviqa.com</a></li>
+<li>alias: <a href="mailto:xxxxxyyyy-exterrnal@sessiondigital.com">xxxxxyyyy-exterrnal@sessiondigital.com</a></li>
 </ul>
 
 <p>last update on <strong><i>Thu Jan 1 00:00:01 UTC 2017</i></strong></p>
