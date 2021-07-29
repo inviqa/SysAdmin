@@ -88,7 +88,7 @@ NETWORK_SERVICE: $NETWORK_SERVICE";
 
 function _remoteproxy_connect() {
   local SSH_COMMAND="ssh -f -N -T -M $SOCKSPROXY_REMOTE_SERVER -D $SOCKSPROXY_PORT"
-  eval $SSH_COMMAND 2>&1 >> /dev/null
+  eval $SSH_COMMAND > /dev/null 2>&1
   _echo "CONNECTED TO $SOCKSPROXY_REMOTE_SERVER PROXY SERVER ON PORT $SOCKSPROXY_PORT";
 }
 function _remoteproxy_disconnect() {
@@ -97,7 +97,7 @@ function _remoteproxy_disconnect() {
   # in .ssh/config
 
   local SSH_COMMAND="ssh -T -O 'exit' $SOCKSPROXY_REMOTE_SERVER"
-  eval $SSH_COMMAND  2>&1 >> /dev/null
+  eval $SSH_COMMAND > /dev/null 2>&1
   _echo "PROXY SERVER DISCONNECTED";
 }
 function _socksproxy_activate() {
