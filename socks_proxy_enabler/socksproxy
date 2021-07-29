@@ -14,7 +14,7 @@ function _get_variables() {
   NETWORK_SERVICE='Ethernet';
 
   local VERBOSE=false;
-  local USER_CONFIGS=~/.socksproxyrc;
+  local USER_CONFIGS="${HOME}/.socksproxyrc";
   # SERVICE_ENABLE='on';
   # SOCKSPROXY_REMOTE_SERVER='remote_server_name_or_ip';
   # SOCKSPROXY_REMOTE_SERVER_PORT='8080';
@@ -23,12 +23,14 @@ function _get_variables() {
   # NETWORK_SERVICE='Ethernet';
 
   # the checks if the user has it's own defaults
-  if [ -f ${USER_CONFIGS} ]; then
-    source ${USER_CONFIGS}
+  if [ -f "${USER_CONFIGS}" ]; then
+    # shellcheck source=$HOME/.socksproxyrc
+    # shellcheck disable=SC1091
+    source "${USER_CONFIGS}"
   fi
 
   # then checks if any inline parameters are passed to override the defauts
-  while [[ "${#}" > 0 ]]; do
+  while [[ "${#}" -gt 0 ]]; do
     option="${1}";
     case $option in
       -v|--verbose)
@@ -87,28 +89,28 @@ NETWORK_SERVICE: $NETWORK_SERVICE";
 }
 
 function _remoteproxy_connect() {
-  local SSH_COMMAND="ssh -f -N -T -M $SOCKSPROXY_REMOTE_SERVER -D $SOCKSPROXY_PORT"
-  eval $SSH_COMMAND > /dev/null 2>&1
-  _echo "CONNECTED TO $SOCKSPROXY_REMOTE_SERVER PROXY SERVER ON PORT $SOCKSPROXY_PORT";
+  local SSH_COMMAND="ssh -f -N -T -M ${SOCKSPROXY_REMOTE_SERVER} -D ${SOCKSPROXY_PORT}"
+  eval "$SSH_COMMAND" > /dev/null 2>&1
+  _echo "CONNECTED TO ${SOCKSPROXY_REMOTE_SERVER} PROXY SERVER ON PORT ${SOCKSPROXY_PORT}";
 }
 function _remoteproxy_disconnect() {
   # requires
   # ControlPath ~/.ssh/xxxxx.ctl
   # in .ssh/config
 
-  local SSH_COMMAND="ssh -T -O 'exit' $SOCKSPROXY_REMOTE_SERVER"
-  eval $SSH_COMMAND > /dev/null 2>&1
+  local SSH_COMMAND="ssh -T -O 'exit' ${SOCKSPROXY_REMOTE_SERVER}"
+  eval "${SSH_COMMAND}" > /dev/null 2>&1
   _echo "PROXY SERVER DISCONNECTED";
 }
 function _socksproxy_activate() {
   #with parameters passed
-  local COMMAND="networksetup -setsocksfirewallproxy "$NETWORK_SERVICE" $SOCKSPROXY_LOCAL_SERVER $SOCKSPROXY_PORT"
-  eval $SUDO $COMMAND
+  local COMMAND="networksetup -setsocksfirewallproxy ${NETWORK_SERVICE} ${SOCKSPROXY_LOCAL_SERVER} ${SOCKSPROXY_PORT}"
+  eval "${SUDO}" "${COMMAND}"
   _echo "PROXY SERVER ENABLED"
 }
 function _socksproxy_deactivate() {
-  local COMMAND="networksetup -setsocksfirewallproxystate "$NETWORK_SERVICE" off"
-  eval $SUDO $COMMAND
+  local COMMAND="networksetup -setsocksfirewallproxystate ${NETWORK_SERVICE} off"
+  eval "${SUDO}" "${COMMAND}"
   _echo "PROXY SERVER DISABLED"
 }
 
