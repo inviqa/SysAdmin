@@ -18,6 +18,7 @@ VERBOSE=true;
 SOCKSPROXY_REMOTE_SERVER='frontdoor';
 SOCKSPROXY_LOCAL_SERVER='localhost';
 SOCKSPROXY_PORT='8080';
+SYSTEM_PROXY_ENABLE=false;
 NETWORK_SERVICE='Wi-Fi';
 ####
 
@@ -29,7 +30,7 @@ NETWORK_SERVICE='Wi-Fi';
 ./socksproxy [ --enable | --disable ]
 
 # this will override any config file parameters
-./socksproxy --verbose --sudo [ --enable | --disable ] --remote server_name --local server_name --port port_number --network service
+./socksproxy --verbose --sudo [ --enable | --disable ] [ --system-proxy ] --remote server_name --local server_name --port port_number --network service
 ```
 # TODO
 - [ ] add a 'Usage' print if no parameter is passed on

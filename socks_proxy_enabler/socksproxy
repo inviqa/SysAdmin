@@ -8,6 +8,7 @@ function _get_variables() {
 
   SERVICE_ENABLE='';
   SUDO_ENABLE=false;
+  SYSTEM_PROXY_ENABLE=false;
   SOCKSPROXY_REMOTE_SERVER='';
   SOCKSPROXY_LOCAL_SERVER='localhost';
   SOCKSPROXY_PORT='8080';
@@ -45,6 +46,9 @@ function _get_variables() {
       --disable)
         SERVICE_ENABLE="off";
       ;;
+      --system-proxy)
+        SYSTEM_PROXY_ENABLE=true;
+      ;;
       -r|--remote)
         SOCKSPROXY_REMOTE_SERVER="${2}";
         shift
@@ -80,12 +84,13 @@ function _get_variables() {
 }
 
 function _print_paramaters() {
-  _echo "SUDO_ENABLE: $SUDO_ENABLE
-SERVICE_ENABLE: $SERVICE_ENABLE
-SOCKSPROXY_REMOTE_SERVER: $SOCKSPROXY_REMOTE_SERVER
-SOCKSPROXY_LOCAL_SERVER: $SOCKSPROXY_LOCAL_SERVER
-SOCKSPROXY_PORT: $SOCKSPROXY_PORT
-NETWORK_SERVICE: $NETWORK_SERVICE";
+  _echo "SUDO_ENABLE: ${SUDO_ENABLE}
+SERVICE_ENABLE: ${SERVICE_ENABLE}
+SOCKSPROXY_REMOTE_SERVER: ${SOCKSPROXY_REMOTE_SERVER}
+SOCKSPROXY_LOCAL_SERVER: ${SOCKSPROXY_LOCAL_SERVER}
+SOCKSPROXY_PORT: ${SOCKSPROXY_PORT}
+SYSTEM_PROXY_ENABLE: ${SYSTEM_PROXY_ENABLE}
+NETWORK_SERVICE: ${NETWORK_SERVICE}";
 }
 
 function _remoteproxy_connect() {
@@ -106,12 +111,12 @@ function _socksfirewallproxy_activate() {
   #with parameters passed
   local COMMAND="networksetup -setsocksfirewallproxy ${NETWORK_SERVICE} ${SOCKSPROXY_LOCAL_SERVER} ${SOCKSPROXY_PORT}"
   eval "${SUDO}" "${COMMAND}"
-  _echo "PROXY SERVER ENABLED"
+  _echo "SYSTEM PROXY ENABLED"
 }
 function _socksfirewallproxy_deactivate() {
   local COMMAND="networksetup -setsocksfirewallproxystate ${NETWORK_SERVICE} off"
   eval "${SUDO}" "${COMMAND}"
-  _echo "PROXY SERVER DISABLED"
+  _echo "SYSTEM PROXY DISABLED"
 }
 
 function manage_proxy() {
@@ -127,9 +132,13 @@ function manage_proxy() {
   fi
   if [[  "${SERVICE_ENABLE}" == "on" ]]; then
     _remoteproxy_connect;
-    _socksfirewallproxy_activate;
+    if $SYSTEM_PROXY_ENABLE; then
+      _socksfirewallproxy_activate;
+    fi
   elif [[ "${SERVICE_ENABLE}" == "off" ]]; then
-    _socksfirewallproxy_deactivate;
+    if $SYSTEM_PROXY_ENABLE; then
+      _socksfirewallproxy_deactivate;
+    fi
     _remoteproxy_disconnect;
   fi
 
