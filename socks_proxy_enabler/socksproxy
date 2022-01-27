@@ -102,13 +102,13 @@ function _remoteproxy_disconnect() {
   eval "${SSH_COMMAND}" > /dev/null 2>&1
   _echo "PROXY SERVER DISCONNECTED";
 }
-function _socksproxy_activate() {
+function _socksfirewallproxy_activate() {
   #with parameters passed
   local COMMAND="networksetup -setsocksfirewallproxy ${NETWORK_SERVICE} ${SOCKSPROXY_LOCAL_SERVER} ${SOCKSPROXY_PORT}"
   eval "${SUDO}" "${COMMAND}"
   _echo "PROXY SERVER ENABLED"
 }
-function _socksproxy_deactivate() {
+function _socksfirewallproxy_deactivate() {
   local COMMAND="networksetup -setsocksfirewallproxystate ${NETWORK_SERVICE} off"
   eval "${SUDO}" "${COMMAND}"
   _echo "PROXY SERVER DISABLED"
@@ -127,9 +127,9 @@ function manage_proxy() {
   fi
   if [[  "${SERVICE_ENABLE}" == "on" ]]; then
     _remoteproxy_connect;
-    _socksproxy_activate;
+    _socksfirewallproxy_activate;
   elif [[ "${SERVICE_ENABLE}" == "off" ]]; then
-    _socksproxy_deactivate;
+    _socksfirewallproxy_deactivate;
     _remoteproxy_disconnect;
   fi
 
