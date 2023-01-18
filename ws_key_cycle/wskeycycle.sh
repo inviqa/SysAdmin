@@ -209,8 +209,17 @@ function replace_string_in_file {
     NEW_STRING="${2}"
     # OLD_STRING=$(printf "%q" ${1})
     # NEW_STRING=$(printf "%q" ${2})
-    OLD_STRING_TRIMMED="${OLD_STRING:0:10}....."
-    NEW_STRING_TRIMMED="${NEW_STRING:0:10}....."
+    if [[ ${#OLD_STRING} -ge 30 ]]; then
+        OLD_STRING_TRIMMED="${OLD_STRING:0:10}...${OLD_STRING: -10:10}"
+    else
+        OLD_STRING_TRIMMED="${OLD_STRING:0:10}..."
+    fi
+    if [[ ${#OLD_STRING} -ge 30 ]]; then
+        NEW_STRING_TRIMMED="${NEW_STRING:0:10}...${NEW_STRING: -10:10}"
+    else
+        NEW_STRING_TRIMMED="${NEW_STRING:0:10}..."
+    fi
+    
     FILE="${3}"
     if [[ -f "${FILE}" ]]; then
         gsed -i -e "s|${OLD_STRING}|${NEW_STRING}|" "${FILE}"
