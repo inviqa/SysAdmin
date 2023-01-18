@@ -239,10 +239,10 @@ function replace_string_in_file {
 function get_old_encryption_secrets {
     SECRETS_ARRAY=()
     if  [[ "${BASH_VERSINFO:-0}" -ge 4 ]]; then
-        mapfile -t SECRETS_ARRAY < <(grep decrypt "${WS_FILE_ORIGINAL}" || true )
+        mapfile -t SECRETS_ARRAY < <(grep decrypt "${WS_FILE_ORIGINAL}" | sort --unique || true )
     else
         # shellcheck disable=SC2207
-        SECRETS_ARRAY=( $( grep decrypt "${WS_FILE_ORIGINAL}" ) )
+        SECRETS_ARRAY=( $( grep decrypt "${WS_FILE_ORIGINAL}" | sort --unique || true ) )
     fi
 
     if [[ ${DEBUG} -ge 1 ]]; then echo "(d) | SECRETS_#: ${#SECRETS_ARRAY[*]}"; fi
@@ -257,7 +257,7 @@ function get_old_encryption_secrets {
         ORIGINAL_SECRETS[ELEMENT]="${SECRET}"
         if [[ ${DEBUG} -ge 2 ]]; then echo "(d) | OLD_ENCRYPTION[${ELEMENT}]: ${ORIGINAL_SECRETS[ELEMENT]}"; fi
     done
-    if [[ ${DEBUG} -ge 1 ]]; then echo "(d) | ${#ORIGINAL_SECRETS[*]} SECRETS FOUND"; fi
+    if [[ ${DEBUG} -ge 1 ]]; then echo "(d) | ${#ORIGINAL_SECRETS[*]} UNIQUE SECRETS FOUND"; fi
 }
 
 function get_raw_secrets {
@@ -328,7 +328,7 @@ function reencrypt_secrets {
                 fi
             fi
         done
-        echo "(i) | ${#NEW_ENCRYPTION_SECRETS[*]} SECRETS UPDATED"
+        echo "(i) | ${#NEW_ENCRYPTION_SECRETS[*]} UNIQUE SECRETS UPDATED"
     else
         echo "(i) | PROCESS COMPLETED WITHOUT PROCESSING ANY SECRET"
     fi
