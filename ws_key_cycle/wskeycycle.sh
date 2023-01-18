@@ -1,29 +1,105 @@
 #!/usr/bin/env bash
-DEBUG=2 # show progress output
-# DEBUG=0 # show only command errors
-# DEBUG=1 # show only command errors
-# DEBUG=2 # show all computed steps output
-REQUIREMENTS=("ws" "gsed")
-export DEVELOPMENT_KEY_DEFAULT=''
-export DEVELOPMENT_KEY_NEW=''
-export ORIGINAL_SECRETS=()
-export WS_FILE="${1:-workspace.yml}"
-export WS_FILE_OVERRIDE="${2:-workspace.override.yml}"
-export WS_FILE_ORIGINAL="${WS_FILE}.orig"
-export WS_FILE_OVERRIDE_ORIGINAL="${WS_FILE_OVERRIDE}.orig"
 
+function load_parameters {
+    tmp="${0%.*}"
+    ME=${tmp##*/}
+    DEBUG=1 # show progress output
+    # DEBUG=0 # show only command errors
+    # DEBUG=1 # show only command errors
+    # DEBUG=2 # show all computed steps output
+    REQUIREMENTS=("ws" "gsed")
+    DEVELOPMENT_KEY_DEFAULT=''
+    DEVELOPMENT_KEY_NEW=''
+    DEVELOPMENT_KEY_FILE=''
+    ORIGINAL_SECRETS=()
+    WS_FILE="workspace.yml"
+    WS_FILE_OVERRIDE="workspace.override.yml"
+
+    read_parameters "${@}"
+
+    export WS_FILE_ORIGINAL="${WS_FILE}.orig"
+    export WS_FILE_OVERRIDE_ORIGINAL="${WS_FILE_OVERRIDE}.orig"
+}
+
+function print_usage {
+  printf  "usage: %s [options] \n" "${ME}"
+  printf  "\noptions:"
+  USAGE="
+      -d|--debug 0|1|2                  0: show only command errors, and rotation completion, 1: show only command errors, 2: show all computed steps output
+      -h|--help                         Print this help  
+      -k|--development-key-file <file>  Path to the plaintext file containing your new Development Key (if this parameter is not specified a new Key will generated automatically)
+      -o|--workspace-override-file      Path to the Workspace Override file where the current Development Key is stored (defaults to workspace.override.yml)
+      -q|--quiet                        Equal to --debug 0
+      -r|--restore                      Restore .orig backup to original Workspace files
+      -w|--workspace-file               Path to the Workspace file where the encrypted secrets are stored (defaults to workspace.yml)
+
+"
+echo "${USAGE}"
+}
+
+function validate_argument {
+  ARGUMENT="${1}"
+  if [[ -z "${ARGUMENT}" || "${ARGUMENT}" == "-*" ]]; then
+    echo "(e) | Invalid or missing argument ${1}"
+    print_usage
+    exit 1
+  fi
+}
+
+function read_parameters {
+  if [[ -n "${1}" ]]; then
+    case "${1}" in
+      -d|--debug)
+        validate_argument "${2}"
+        DEBUG="${2}"
+        shift 2
+        ;;
+      -h|--help)
+        print_usage
+        exit 0
+        ;;
+      -k|--development-key-file)
+        validate_argument "${2}"
+        DEVELOPMENT_KEY_FILE="${2}"
+        shift 2
+        ;;
+      -o|--workspace-override-file)
+        validate_argument "${2}"
+        WS_FILE_OVERRIDE="${2}"
+        shift 2
+        ;;
+      -q|--quiet)
+        DEBUG=0
+        shift 1
+        ;;
+      -r|--restore)
+        RESTORE_BACKUP=true
+        shift 1
+        ;;
+      -w|--workspace-file)
+        validate_argument "${2}"
+        WS_FILE="${2}"
+        shift 2
+        ;;
+      *)
+        echo "(e) | Invalid option: ${1}"
+        print_usage
+        exit 1
+        ;;
+    esac
+    read_parameters "${@}"
+  fi
+}
     
 function is_requirement_available {
-
     for TOOL in "${REQUIREMENTS[@]}"
     do
         TOOL_PATH="$( command -v "${TOOL}")"
         if [[ ! -x "${TOOL_PATH}" ]]; then
-            echo "(e) | Command '${TOOL}' not found or not executable!"
+            echo "(e) | ABORTING: COMMAND '${TOOL}' NOT FOUND OR NOT EXECUTABLE!"
             return 1
         else
             if [[ ${DEBUG} -ge 1 ]]; then echo "(d) | REQUIREMENT FOUND: ${TOOL_PATH}"; fi
-            # return 0
         fi
     done
 }
@@ -42,7 +118,28 @@ function backup_workspace_files {
                 if [[ ${DEBUG} -ge 1 ]]; then echo "(d) | SKIPPING BACKUP: '${BACKUP_FILE}' already exists"; fi
             fi
         else
-            echo "(e) | Workspace file '${FILE}' not found!"
+            echo "(e) | ABORTING: WORKSPACE FILE '${FILE}' NOT FOUND!"
+            exit 1
+        fi
+    done
+}
+
+function restore_workspace_files {
+    if [[ ${DEBUG} -ge 2 ]]; then echo "(d) | WS_FILE: ${WS_FILE}"; fi
+    if [[ ${DEBUG} -ge 2 ]]; then echo "(d) | WS_FILE_ORIGINAL: ${WS_FILE_ORIGINAL}"; fi
+    if [[ ${DEBUG} -ge 2 ]]; then echo "(d) | WS_FILE_OVERRIDE: ${WS_FILE_OVERRIDE}"; fi
+    if [[ ${DEBUG} -ge 2 ]]; then echo "(d) | WS_FILE_OVERRIDE_ORIGINAL: ${WS_FILE_OVERRIDE_ORIGINAL}"; fi
+    for FILE in "${WS_FILE}" "${WS_FILE_OVERRIDE}"
+    do
+        BACKUP_FILE="${FILE}.orig"
+        if [[ -f "${BACKUP_FILE}" ]]; then 
+            if cp -a "${BACKUP_FILE}" "${FILE}"; then
+                if [[ ${DEBUG} -ge 1 ]]; then echo "(d) | BACKUP '${BACKUP_FILE}' RESTORED TO '${FILE}'"; fi
+            else
+                if [[ ${DEBUG} -ge 1 ]]; then echo "(e) | ABORTING: COULD NOT RESTORE '${FILE}'"; fi
+            fi
+        else
+            echo "(e) | ABORTING: BACKUP FILE '${BACKUP_FILE}' NOT FOUND"
             exit 1
         fi
     done
@@ -51,14 +148,43 @@ function backup_workspace_files {
 function get_development_key_default {
     DEVELOPMENT_KEY_DEFAULT="$( grep "key('default')" "${WS_FILE_OVERRIDE_ORIGINAL}" || true )"
     DEVELOPMENT_KEY_DEFAULT="${DEVELOPMENT_KEY_DEFAULT##*:\ }"
+    DEVELOPMENT_KEY_CURRENT="$( grep "key('default')" "${WS_FILE_OVERRIDE}" || true )"
+    DEVELOPMENT_KEY_CURRENT="${DEVELOPMENT_KEY_CURRENT##*:\ }"
+
     if [[ ${DEBUG} -ge 2 ]]; then echo "(d) | DEVELOPMENT_KEY_DEFAULT: ${DEVELOPMENT_KEY_DEFAULT}"; fi
+    if [[ "${DEVELOPMENT_KEY_DEFAULT}" != "${DEVELOPMENT_KEY_CURRENT}" ]]; then
+        if [[ ${DEBUG} -ge 2 ]]; then echo "(d) | DEVELOPMENT_KEY_CURRENT: ${DEVELOPMENT_KEY_CURRENT}"; fi
+        echo "(e) | ABORTING..."
+        echo "(e) | THE ORIGINAL DEVELOPMENT KEY '${DEVELOPMENT_KEY_DEFAULT:0:5}.....' DIFFERS FROM THE CURRENT KEY '${DEVELOPMENT_KEY_CURRENT:0:5}.....'"
+        echo "(e) | IT WILL NOT BE ABLE TO DECRYPT THE SECRETS '${WS_FILE_OVERRIDE}'"
+        echo "(i) | This is probably due to a previous Workspace Development Key rotation"
+        echo "(i) | Restore the '.origin' backup files to cycle from the ORIGINAL Workspace file"
+        echo "(i) | Remove the '.origin' backup files to cycle from the NEW Workspace files"
+        exit 1
+    fi
 }
 
 function update_development_key {
     if is_string_in_file "${DEVELOPMENT_KEY_DEFAULT}" "${WS_FILE_OVERRIDE}"; then
-        DEVELOPMENT_KEY_NEW="$( ws secret generate-random-key )"
-        replace_string_in_file "${DEVELOPMENT_KEY_DEFAULT}" "${DEVELOPMENT_KEY_NEW}" "${WS_FILE_OVERRIDE}"
-        if [[ ${DEBUG} -ge 2 ]]; then echo "(d) | DEVELOPMENT_KEY_NEW: ${DEVELOPMENT_KEY_NEW}"; fi
+        if [[ -n "${DEVELOPMENT_KEY_FILE}" ]]; then
+            if [[ ${DEBUG} -ge 1 ]]; then echo "(d) | USING NEW DEVELOPMENT FROM '${DEVELOPMENT_KEY_FILE}'"; fi
+            if [[ -f "${DEVELOPMENT_KEY_FILE}" ]]; then
+                DEVELOPMENT_KEY_NEW="$( cat "${DEVELOPMENT_KEY_FILE}" )"
+            else
+                echo "(e) | ABORTING: 'DEVELOPMENT_KEY_FILE' NOT FOUND"
+                exit 1
+            fi
+        else
+            if [[ ${DEBUG} -ge 1 ]]; then echo "(d) | GENERATING A NEW DEVELOPMENT KEY VIA 'ws secret generate-random-key'"; fi 
+            DEVELOPMENT_KEY_NEW="$( ws secret generate-random-key )"
+        fi
+        if [[ -n "${DEVELOPMENT_KEY_NEW}" ]]; then 
+            replace_string_in_file "${DEVELOPMENT_KEY_DEFAULT}" "${DEVELOPMENT_KEY_NEW}" "${WS_FILE_OVERRIDE}"
+            if [[ ${DEBUG} -ge 2 ]]; then echo "(d) | DEVELOPMENT_KEY_NEW: ${DEVELOPMENT_KEY_NEW}"; fi
+        else
+            echo "(e) | ABORTING: NEW DEVELOPMENT KEY IS ANY EMPTY STRING"
+            exit 1
+        fi
     else
         echo "(e) | ABORTING: '${DEVELOPMENT_KEY_DEFAULT:0:5}.....' NOT FOUND IN '${WS_FILE_OVERRIDE}'"
         exit 1
@@ -86,26 +212,16 @@ function replace_string_in_file {
     NEW_STRING_TRIMMED="${NEW_STRING:0:10}....."
     FILE="${3}"
     if [[ -f "${FILE}" ]]; then
-        ### these works only for simply values
-        ### do not work for encrypted secrets
-        # perl -pe "s|${OLD_STRING}|${NEW_STRING}|g" "${FILE}" > tmpfile && mv tmpfile "${FILE}"
-        # printf '%s\n' ",s|${OLD_STRING}|${NEW_STRING}|g" w q | ed "${FILE}"
-        # sed "s|${OLD_STRING}|${NEW_STRING}|" "${FILE}" > tmpfile && mv tmpfile "${FILE}"
-        # sed -i -e 's|'"${OLD_STRING}"'|'"${NEW_STRING}"'|g' "${FILE}"
         gsed -i -e "s|${OLD_STRING}|${NEW_STRING}|" "${FILE}"
-
-        # can't find a way to work with any string
-        # awk '{gsub(${NEW_STRING}, ${OLD_STRING}, $0); print}' "${FILE}"
-        # awk -v old=${OLD_STRING} -v new=${NEW_STRING} '{gsub(new, old, $0); print}' "${FILE}" > "${FILE}"
-
         if is_string_in_file "${NEW_STRING:0:300}" "${FILE}"; then
             if [[ ${DEBUG} -ge 1 ]]; then echo "(d) | STRING '${OLD_STRING_TRIMMED}' REPLACED WITH '${NEW_STRING_TRIMMED}' IN '${FILE}'"; fi
         else
+            echo "(e) | ABORTING..."
             echo "(e) | ERROR WHILE REPLACING STRING '${OLD_STRING_TRIMMED}' WITH  '${NEW_STRING_TRIMMED}' IN FILE '${FILE}'"
             exit 1
         fi
     else
-        echo "(e) | FILE '${FILE}' not found!"
+        echo "(e) | ABORTING: FILE '${FILE}' not found!"
         exit 1
     fi
 }
@@ -146,6 +262,7 @@ function get_raw_secrets {
             fi
         done
         if [[ ${#ORIGINAL_SECRETS[*]} -ne ${#RAW_SECRETS[*]} ]]; then
+            echo "(e) | ABORTING..."
             echo "(e) | UNEXPECTED ERROR: QUANTITY OF ENCRYPTED SECRETS IS ${#ORIGINAL_SECRETS[*]} Vs ${#RAW_SECRETS[*]} RAW SECRETS"
             exit 1
         fi
@@ -166,6 +283,7 @@ function generate_new_encryption_secrets {
             fi
         done
         if [[ ${#NEW_ENCRYPTION_SECRETS[*]} -ne ${#RAW_SECRETS[*]} ]]; then
+            echo "(e) | ABORTING..."
             echo "(e) | UNEXPECTED ERROR: QUANTITY OF NEW ENCRYPTED SECRETS IS ${#NEW_ENCRYPTION_SECRETS[*]} Vs ${#RAW_SECRETS[*]} RAW SECRETS"
             exit 1
         fi
@@ -194,6 +312,7 @@ function reencrypt_secrets {
                 if replace_string_in_file "${ORIGINAL_SECRET}" "${NEW_ENCRYPTION_SECRET}" "${WS_FILE}"; then
                     if [[ ${DEBUG} -ge 2 ]]; then echo "(d) | NEW_ENCRYPTION[${ELEMENT}]: ${NEW_ENCRYPTION_SECRETS[ELEMENT]}"; fi
                 else
+                    echo "(e) | ABORTING..."
                     echo "(e) | UNEXPECTED ERROR WHILE UPDATING SECRET[${ELEMENT}]"
                     exit 1
                 fi
@@ -206,6 +325,11 @@ function reencrypt_secrets {
 
 }
 
+load_parameters "${@}"
+if [[ "${RESTORE_BACKUP}" == true ]];then
+    restore_workspace_files
+    exit 0
+fi
 
 if is_requirement_available; then
     backup_workspace_files
