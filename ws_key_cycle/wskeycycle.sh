@@ -2,7 +2,7 @@
 # DEBUG=0 # show only command errors
 DEBUG=1 # show progress output
 # DEBUG=2 # show all computed steps output
-
+REQUIREMENTS=("ws" "gsed")
 export DEVELOPMENT_KEY_DEFAULT=''
 export DEVELOPMENT_KEY_NEW=''
 export ORIGINAL_SECRETS=()
@@ -11,15 +11,20 @@ export WS_FILE_OVERRIDE="${2:-workspace.override.yml}"
 export WS_FILE_ORIGINAL="${WS_FILE}.orig"
 export WS_FILE_OVERRIDE_ORIGINAL="${WS_FILE_OVERRIDE}.orig"
 
-function is_workspace_available {
-    WS_PATH="$( command -v ws)"
-    if [[ ! -x "${WS_PATH}" ]]; then
-        echo "(e) | Workspace command ${WS_PATH} not found or not executable!"
-        return 1
-    else
-        if [[ ${DEBUG} -ge 1 ]]; then echo "(d) | WS_PATH: ${WS_PATH}"; fi
-        return 0
-    fi
+    
+function is_requirement_available {
+
+    for TOOL in "${REQUIREMENTS[@]}"
+    do
+        TOOL_PATH="$( command -v "${TOOL}")"
+        if [[ ! -x "${TOOL_PATH}" ]]; then
+            echo "(e) | Command '${TOOL}' not found or not executable!"
+            return 1
+        else
+            if [[ ${DEBUG} -ge 1 ]]; then echo "(d) | REQUIREMENT FOUND: ${TOOL_PATH}"; fi
+            # return 0
+        fi
+    done
 }
 
 function backup_workspace_files {
@@ -86,7 +91,7 @@ function replace_string_in_file {
         # printf '%s\n' ",s|${OLD_STRING}|${NEW_STRING}|g" w q | ed "${FILE}"
         # sed "s|${OLD_STRING}|${NEW_STRING}|" "${FILE}" > tmpfile && mv tmpfile "${FILE}"
         # sed -i -e 's|'"${OLD_STRING}"'|'"${NEW_STRING}"'|g' "${FILE}"
-        sed -i -e "s|${OLD_STRING}|${NEW_STRING}|" "${FILE}"
+        gsed -i -e "s|${OLD_STRING}|${NEW_STRING}|" "${FILE}"
 
         # can't find a way to work with any string
         # awk '{gsub(${NEW_STRING}, ${OLD_STRING}, $0); print}' "${FILE}"
@@ -200,7 +205,7 @@ function reencrypt_secrets {
 }
 
 
-if is_workspace_available; then
+if is_requirement_available; then
     backup_workspace_files
     reencrypt_secrets
     exit 0
