@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-DEBUG=2 #0,1,2
+# DEBUG=0 # show only command errors
+DEBUG=1 # show progress output
+# DEBUG=2 # show all computed steps output
+
 export DEVELOPMENT_KEY_DEFAULT=''
 export DEVELOPMENT_KEY_NEW=''
 export ORIGINAL_SECRETS=()

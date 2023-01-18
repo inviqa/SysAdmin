@@ -23,6 +23,14 @@ Restore the original Workspace files
 cp workspace.override.yml.orig workspace.override.yml
 cp workspace.yml.orig workspace.yml
 ```
+### Debugging
+
+It's possinle to tune the debugging verbosity setting in the script itself the `DEBUG=` environment
+```bash
+DEBUG=0 # show only command errors
+DEBUG=1 # show progress output
+DEBUG=2 # show all computed steps output
+```
 
 ## TODO
 
