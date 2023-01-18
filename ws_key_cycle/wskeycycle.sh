@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
+DEBUG=2 # show progress output
 # DEBUG=0 # show only command errors
-DEBUG=1 # show progress output
+# DEBUG=1 # show only command errors
 # DEBUG=2 # show all computed steps output
 REQUIREMENTS=("ws" "gsed")
 export DEVELOPMENT_KEY_DEFAULT=''
@@ -184,7 +185,8 @@ function reencrypt_secrets {
     update_development_key
     generate_new_encryption_secrets
     if [[ ${#NEW_ENCRYPTION_SECRETS[*]} -ge 1 ]]; then
-        for (( ELEMENT=0; ELEMENT<${#ORIGINAL_SECRET[*]}; ELEMENT++ ));
+        if [[ ${DEBUG} -ge 1 ]]; then echo "(d) | UPDATING SECRETS WITH NEW ENCRYPTION"; fi
+        for (( ELEMENT=0; ELEMENT<${#ORIGINAL_SECRETS[*]}; ELEMENT++ ));
         do
             ORIGINAL_SECRET="${ORIGINAL_SECRETS[${ELEMENT}]}"
             NEW_ENCRYPTION_SECRET="${NEW_ENCRYPTION_SECRETS[${ELEMENT}]}"
