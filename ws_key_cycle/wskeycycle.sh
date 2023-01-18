@@ -14,7 +14,8 @@ function load_parameters {
     ORIGINAL_SECRETS=()
     WS_FILE="workspace.yml"
     WS_FILE_OVERRIDE="workspace.override.yml"
-
+    WS_JENKINS_FILE="Jenkinsfile"
+    RESTORE_BACKUP=false
     read_parameters "${@}"
 
     export WS_FILE_ORIGINAL="${WS_FILE}.orig"
@@ -325,6 +326,21 @@ function reencrypt_secrets {
 
 }
 
+function check_jenkins {
+    if [[ -f "${WS_JENKINS_FILE}" ]]; then
+        if [[ ${DEBUG} -ge 1 ]]; then echo "(d) | JENKINS FILE '${WS_JENKINS_FILE}' FOUND"; fi
+        JENKINS_MY127WS_KEY="$( grep "MY127WS_KEY" "${WS_JENKINS_FILE}" || true )"
+        JENKINS_MY127WS_KEY="${JENKINS_MY127WS_KEY//[[:blank:]]/}" 
+        if [[ -n "${JENKINS_MY127WS_KEY}" ]]; then
+            if [[ ${DEBUG} -ge 1 ]]; then echo "(d) | JENKINS FILE USES '${JENKINS_MY127WS_KEY}'"; fi
+            echo "(i) | Consider updating the Jenkins credential"
+            echo "(i) | If necessary update the Workspace attribute 'jenkins.credentials.my127ws_key'"
+        fi
+    else
+        if [[ ${DEBUG} -ge 1 ]]; then echo "(d) | NO JENKINS FILE FOUND"; fi
+    fi
+}
+
 load_parameters "${@}"
 if [[ "${RESTORE_BACKUP}" == true ]];then
     restore_workspace_files
@@ -334,12 +350,8 @@ fi
 if is_requirement_available; then
     backup_workspace_files
     reencrypt_secrets
+    check_jenkins
     exit 0
 else
     exit 1
 fi
-
-
-
-
-# if [[ ${DEBUG} -ge 2 ]]; then echo "(d) | ALL_ATTR: ${SECRETS_ARRAY[*]}"; fi
