@@ -26,7 +26,9 @@ function print_usage {
   printf  "usage: %s [options] \n" "${ME}"
   printf  "\noptions:"
   USAGE="
-      -d|--debug 0|1|2                  0: show only command errors, and rotation completion, 1: show only command errors, 2: show all computed steps output
+      -d|--debug <level>                0: show only command errors and rotation completion
+                                        1: show only command errors
+                                        2: show all computed steps output
       -h|--help                         Print this help  
       -k|--development-key-file <file>  Path to the plaintext file containing your new Development Key (if this parameter is not specified a new Key will generated automatically)
       -o|--workspace-override-file      Path to the Workspace Override file where the current Development Key is stored (defaults to workspace.override.yml)
