@@ -3,10 +3,7 @@
 function load_parameters {
     tmp="${0%.*}"
     ME=${tmp##*/}
-    DEBUG=1 # show progress output
-    # DEBUG=0 # show only command errors
-    # DEBUG=1 # show only command errors
-    # DEBUG=2 # show all computed steps output
+    DEBUG=1
     REQUIREMENTS=("ws" "gsed")
     DEVELOPMENT_KEY_DEFAULT=''
     DEVELOPMENT_KEY_NEW=''
@@ -209,8 +206,8 @@ function is_string_in_file {
 function replace_string_in_file {
     OLD_STRING="${1}"
     NEW_STRING="${2}"
-    # OLD_STRING=$(printf "%q" ${1})
-    # NEW_STRING=$(printf "%q" ${2})
+    FILE="${3}"
+
     if [[ ${#OLD_STRING} -ge 30 ]]; then
         OLD_STRING_TRIMMED="${OLD_STRING:0:10}...${OLD_STRING: -10:10}"
     else
@@ -222,7 +219,6 @@ function replace_string_in_file {
         NEW_STRING_TRIMMED="${NEW_STRING:0:10}..."
     fi
     
-    FILE="${3}"
     if [[ -f "${FILE}" ]]; then
         gsed -i -e "s|${OLD_STRING}|${NEW_STRING}|" "${FILE}"
         if is_string_in_file "${NEW_STRING:0:300}" "${FILE}"; then
