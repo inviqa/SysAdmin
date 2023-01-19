@@ -1,6 +1,6 @@
-# Worksapce Key Cycling
+# Workspace Key Cycling
 
-Worksapce Key Cycling is script written in BASH used to automate
+Workspace Key Cycling is script written in BASH used to automate
 a Workspace project's Development Key rotation
 
 ## What it does
