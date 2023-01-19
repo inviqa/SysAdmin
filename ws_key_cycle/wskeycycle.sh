@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
+
 function load_parameters {
     tmp="${0%.*}"
     ME=${tmp##*/}
     DEBUG=1
-    REQUIREMENTS=("ws" "gsed")
+    REQUIREMENTS=('gsed' 'ws')
     DEVELOPMENT_KEY_DEFAULT=''
     DEVELOPMENT_KEY_NEW=''
     DEVELOPMENT_KEY_FILE=''
@@ -236,11 +237,13 @@ function replace_string_in_file {
 
 function get_old_encryption_secrets {
     SECRETS_ARRAY=()
+    GREP_COMMAND="grep decrypt ${WS_FILE_ORIGINAL}"
     if  [[ "${BASH_VERSINFO:-0}" -ge 4 ]]; then
-        mapfile -t SECRETS_ARRAY < <(grep decrypt "${WS_FILE_ORIGINAL}" | sort --unique || true )
+        mapfile -t SECRETS_ARRAY < <( ${GREP_COMMAND} | sort --unique || true )
     else
         # shellcheck disable=SC2207
-        SECRETS_ARRAY=( $( grep decrypt "${WS_FILE_ORIGINAL}" | sort --unique || true ) )
+        # SECRETS_ARRAY=( "$( "${GREP_COMMAND}" | sort --unique || true)" )
+        SECRETS_ARRAY=( "$( ${GREP_COMMAND} | sort --unique || true )" )
     fi
 
     if [[ ${DEBUG} -ge 1 ]]; then echo "(d) | SECRETS_#: ${#SECRETS_ARRAY[*]}"; fi
