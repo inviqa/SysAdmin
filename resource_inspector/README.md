@@ -1,6 +1,3 @@
-Certainly! Here's the output of the README.md file as a single markdown snippet:
-
-```markdown
 # DigitalOcean Resource Fetch Script
 
 This bash script allows you to easily fetch information about your DigitalOcean resources using the DigitalOcean API. It retrieves various resource types such as droplets, volumes, images, snapshots, and domains, and displays relevant information such as the resource ID, name, and creation date. The script is designed to be compatible with Unix-based systems, including macOS.
