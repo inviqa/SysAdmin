@@ -18,10 +18,10 @@ get_aws_resources() {
           query='Volumes[].{id: VolumeId, name: Tags[?Key==`Name`].Value | [0], created_at: CreateTime}'
           ;;
       "images")
-          query="Images[?OwnerId=='${AWS_CALLER_IDENTITY}'].{id: ImageId, name: Name, created_at: CreationDate}"
+          query="Images[].{id: ImageId, name: Name, created_at: CreationDate}"
           ;;
       "snapshots")
-          query="Snapshots[?OwnerId=='${AWS_CALLER_IDENTITY}'].{id: SnapshotId, name: Description, created_at: StartTime}"
+          query="Snapshots[].{id: SnapshotId, name: Description, created_at: StartTime}"
           ;;
       *)
         if [[ -n "${DEBUG}" ]]; then
@@ -30,7 +30,7 @@ get_aws_resources() {
         fi
           ;;
   esac 
-  data=$(aws ec2 "describe-${resource_type}" --region "${region}" --query "${query}" --output json 2>/dev/null);
+  data=$(aws ec2 "describe-${resource_type}" --region "${region}" --query "${query}" --filters "Name=owner-id,Values=${AWS_CALLER_IDENTITY}" --output json 2>/dev/null);
   echo "${data}" # Return the data
 }
 

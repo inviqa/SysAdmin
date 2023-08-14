@@ -93,6 +93,8 @@ Both scripts will display the fetched resources in various colors based on their
 
 Here's an example of what you might see (actual results are anonymised):
 
+> The standard output is provided in CSV format
+
 ### DigitalOcean Script
 
 ```csv
