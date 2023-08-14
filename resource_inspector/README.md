@@ -42,25 +42,25 @@ Ensure `jq` is installed and available.
 
 2. Run the script:
 
-```shell
-./check_aws_resources.sh
+   ```shell
+   ./check_aws_resources.sh
 
-```
+   ```
 
    User specific AWS profile using option `-p or --profile` and specific region
    using `-r or --region`
 
-```shell
-./check_aws_resources.sh --profile demo-profile --region us-west-2
-./check_aws_resources.sh -p demo-profile -r us-west-2
-```
+   ```shell
+   ./check_aws_resources.sh --profile demo-profile --region us-west-2
+   ./check_aws_resources.sh -p demo-profile -r us-west-2
+   ```
 
    Enable `DEBUG` or verbose mode can be invoked using option `-v or --verbose`
 
-```shell
-./check_aws_resources.sh --verbose
-./check_aws_resources.sh -v
-```
+   ```shell
+   ./check_aws_resources.sh --verbose
+   ./check_aws_resources.sh -v
+   ```
 
 ### DigitalOcean script
 
@@ -80,6 +80,13 @@ Ensure `jq` is installed and available.
 
    ```shell
    ./check_do_resources.sh
+   ```
+
+   Select a specific DO resource type `-r or --resource-type`
+
+   ```shell
+   ./check_do_resources.sh --resource-type <droplets|volumes|images|snapshots|domains|kubernetes_clusters>
+   ./check_do_resources.sh -r <droplets|volumes|images|snapshots|domains|kubernetes_clusters>
    ```
 
 ## Sample Output
