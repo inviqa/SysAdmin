@@ -1,0 +1,50 @@
+---
+- name: Check DigitalOcean API Key
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Source the DigitalOcean API key from an environment variable
+      shell: echo ${{DIGITAL_OCEAN_API_KEY}}
+      register: api_key_output
+
+    - name: Check if API Key is provided
+      fail:
+        msg: "API Key is not provided. Please set the DIGITAL_OCEAN_API_KEY environment variable."
+      when: api_key_output.stdout == ""
+
+- name: Get DigitalOcean Resources
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Get DigitalOcean resources
+      uri:
+        url: "https://api.digitalocean.com/v2/{{ resource_type }}"
+        method: GET
+        headers:
+          Content-Type: "application/json"
+          Authorization: "Bearer {{ lookup('env', 'DIGITAL_OCEAN_API_KEY') }}"
+        validate_certs: no
+      register: get_resources_result
+      failed_when: get_resources_result is failed
+
+    - name: Process Resource
+      shell: |
+        resource_type="{{ resource_type }}"
+        id="{{ item.id }}"
+        name="{{ item.name }}"
+        created_at="{{ item.created_at }}"
+        today_unix=$(date -u "+%s")
+        created_at_unix=$(date -ju -f "%Y-%m-%dT%H:%M:%SZ" "${created_at}" "+%s" 2>/dev/null || date -ju -f "%Y-%m-%dT%H:%M:%S%Z" "${created_at}" "+%s" 2>/dev/null)
+        date_diff=$(( (today_unix - created_at_unix) / 31536000 ))
+        if (( date_diff < (1) )); then
+          color='\033[0;32m' # Green
+        elif (( date_diff < (2) )); then
+          color='\033[0;34m' # Blue
+        elif (( date_diff < (3) )); then
+          color='\033[0;33m' # Yellow
+        else
+          color='\033[0;31m' # Red
+        fi
+        echo -e "${color}${resource_type}: ${id} ${name} ${created_at}\033[0m"
+      loop: "{{ get_resources_result.json[resource_type] }}"
