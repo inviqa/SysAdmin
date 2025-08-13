@@ -3,7 +3,6 @@
 # Source the DigitalOcean API key from an environment variable
 # shellcheck disable=SC2154
 API_KEY="${DIGITAL_OCEAN_API_KEY}"
-INVOICE_CSV=""
 if [[ -z "${API_KEY}" ]]; then
   echo "API Key is not provided. Please set the DIGITAL_OCEAN_API_KEY environment variable."
   exit 1
